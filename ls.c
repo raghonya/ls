@@ -42,9 +42,25 @@ void add_elem_to_str(char *s, int len, char to_be_added)
 	}
 }
 
-int	nonflag_arg_parse(cmd_t *ls, char *path)
+int	add_arg(cmd_t *ls, char *path)
 {
-	node_add_back(&ls->resources, node_new(path));
+	arg_t	*data;
+
+	data = malloc(sizeof(arg_t));
+	if (!data)
+	{
+		write(2, "Malloc error\n", 13);
+		exit(2);
+	}
+	data->group = "";
+	data->num_of_links = 0;
+	data->owner = "";
+	data->path = path;
+	data->perm = 0;
+	data->size = 0;
+	data->time_last_modif = "";
+	data->type = FILETYPE;
+	ft_lstadd_back(&ls->arg, ft_lstnew(data));
 	// minchev hishem
 	return (0);
 }
@@ -89,7 +105,7 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 			}
 		}
 		else
-			nonflag_arg_parse(ls, argv[i]);
+			add_arg(ls, argv[i]);
 	}
 	return (0);
 }
@@ -110,36 +126,88 @@ void return_code_check(int err_code, int exit_code)
 	exit(exit_code); // nned to be changed
 }
 
-int	handle_recursion(cmd_t *ls)
-{
+//int	handle_recursion(cmd_t *ls)
+//{
 
-	return (0);
+//	return (0);
+//}
+
+int	print_name(arg_t *data, uint32_t flags)
+{
+	if (data->path[0] == . && !(LS_OPTION_a & flags))
+		return (0);
+	if (LS_OPTION_l & flags)
+	{
+		//OPTION
+		//write(1, )
+	}
 }
 
-int	run_command(cmd_t *ls)
+int	show_contents(cmd_t *ls, t_list *node)
 {
 	struct stat	statbuf;
+	arg_t		*data = node->data;
 
-	if (lstat(ls->resources->path, &statbuf) != 0)
+	//if (ls->flags & LS_OPTION_l)
+	//{
+	if (lstat(data->path, &statbuf) != 0)
 	{
 		write (2, "error stat\n", 11);
+		exit(2);
 	}
-	if (ls->resources->path[ft_strlen(ls->resources->path) - 1] == '/')
+	listxattr()
+	data->type = statbuf.st_mode & S_IFMT;
+	//switch (data->type)
+	//{
+	//	case BLOCK_DEV:		printf("block device\n"); break;
+	//	case LINK:			printf("symlink\n"); break;
+	//	case CHARACTER_DEV:	printf("character device\n"); break;
+	//	case DIRECTORY:		printf("directory\n"); break;
+	//	case FILETYPE:		printf("regular file\n"); break;
+	//	default:			printf("unknown?\n"); break;
+	//}
+	if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
 	{
-		printf("mejiny pti tpvi\n");
-	}
-	switch (statbuf.st_mode & S_IFMT)
-	{
-		case S_IFBLK:	printf("block device\n"); break;
-		case S_IFLNK:	printf("symlink\n"); break;
-		case S_IFCHR:	printf("character device\n"); break;
-		case S_IFDIR:	printf("directory\n"); break;
-		//case S_IFIFO:  printf("FIFO/pipe\n"); break;
-		case S_IFREG:	printf("regular file\n"); break;
-		//case S_IFSOCK: printf("socket\n"); break;
-		default:		printf("unknown?\n"); break;
-	}
+		DIR				*dir;
+		struct dirent	*elem;
 
+		dir = opendir(data->path);
+		if (!dir)
+		{
+			write(2, "Dir error\n", 10);
+			exit(1);
+		}
+		//if (ls->flags & LS_OPTION_R)
+		elem = readdir(dir);
+
+		if (elem->d_type == DT_DIR && ls->flags & LS_OPTION_R)
+		{
+			write(1, ls->parent_path, ft_strlen(ls->parent_path));
+			show_contents(ls, );
+		}
+		while (elem != NULL)
+		{
+			//if (ls->flags & LS_OPTION_a)
+				write (1, elem->d_name, ft_strlen(elem->d_name));
+			//printf ("%ld\n%s\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_reclen, elem->d_type);
+			elem = readdir(dir);
+			if (elem != NULL)
+				write(1, " ", 1);
+		}
+		//printf ("%ld\n%s\n%hu\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_namlen, elem->d_reclen, elem->d_type);
+		closedir(dir);
+	}
+	//if ()
+	//printf ("%d\n", statbuf.st_mode & S_IRUSR);
+	//printf ("%d\n", statbuf.st_mode & S_IWUSR);
+	//printf ("%d\n", statbuf.st_mode & S_IXUSR);
+	//printf ("%d\n", statbuf.st_mode & S_IRGRP);
+	//printf ("%d\n", statbuf.st_mode & S_IWGRP);
+	//printf ("%d\n", statbuf.st_mode & S_IXGRP);
+	//printf ("%d\n", statbuf.st_mode & S_IROTH);
+	//printf ("%d\n", statbuf.st_mode & S_IWOTH);
+	//printf ("%d\n", statbuf.st_mode & S_IXOTH);
+//}
 	//exit(1);
 }
 
@@ -152,12 +220,20 @@ int	main(int argc, char **argv)
 		return (1);
 	//ls->used_flags[0] = 0;
 	ls->flags = 0;
-	ls->resources = NULL;
+	ls->arg = NULL;
 	ret = arg_parse(ls, argc, argv);
 	if (ret) return_code_check(ls->return_code, ret);
+	if (ls->arg == NULL)
+		add_arg(ls, ".");
 	printf ("%d\n", ls->flags);
 
-	ret = run_command(ls);
+	t_list	*tmp_arg = ls->arg;
+	while (tmp_arg)
+	{
+		ls->parent_path = ((arg_t *)tmp_arg->data)->path;
+		ret = show_contents(ls, tmp_arg);
+		tmp_arg = tmp_arg->next;
+	}
 	if (ret)
 		err_exit(ret, "error");
 
@@ -165,10 +241,11 @@ int	main(int argc, char **argv)
 	//	handle_recursion(ls);
 
 	//tmp
-	while (ls->resources != NULL)
+	while (ls->arg != NULL)
 	{
-		arg_t *tmp = ls->resources;
-		ls->resources = ls->resources->next;
+		t_list *tmp = ls->arg;
+		ls->arg = ls->arg->next;
+		free(tmp->data);
 		free(tmp);
 	}
 	//tmp

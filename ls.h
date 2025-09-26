@@ -46,23 +46,30 @@ typedef enum error_codes_t
 
 typedef enum arg_type_t
 {
-	FILETYPE = 0,
-	DIRECTORY,
-	LINK,
-	BLOCK_DEV,
-	CHARACTER_DEV
+	FILETYPE = S_IFREG,
+	DIRECTORY = S_IFDIR,
+	LINK = S_IFLNK,
+	BLOCK_DEV = S_IFBLK,
+	CHARACTER_DEV = S_IFCHR
+	//S_IFBLK,
+	//S_IFLNK,
+	//S_IFCHR,
+	//S_IFDIR,
+	//S_IFREG
 } arg_type_t;
 
 typedef struct arg_t
 {
 	arg_type_t		type;
+	uint16_t		perm;
 	size_t			num_of_links;
 	char			*owner;
 	char			*group;
 	size_t			size;
 	char			*time_last_modif;
 	char			*path;
-	struct arg_t	*next;
+	off_t			blocks;
+	//struct arg_t	*next;
 } arg_t;
 
 typedef struct cmd_t
@@ -71,7 +78,9 @@ typedef struct cmd_t
 	uint32_t	flags;
 	//int32_t	flags;
 	//char		**args;
-	arg_t		*resources;
+	t_list		*arg;
+	char		*parent_path;
+	//arg_t		*resources;
 
 } cmd_t;
 
