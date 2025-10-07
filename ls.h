@@ -43,6 +43,12 @@ typedef enum error_codes_t
 
 //} flag_bin_val_t;
 
+// typedef struct queue_t
+// {
+// 	struct dirent	*
+
+// } queue_t;
+
 
 typedef enum arg_type_t
 {
@@ -79,6 +85,7 @@ typedef struct cmd_t
 	//int32_t	flags;
 	//char		**args;
 	t_list		*arg;
+	t_list		*dir_queue;
 	char		*parent_path;
 	//arg_t		*resources;
 

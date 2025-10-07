@@ -134,13 +134,47 @@ void return_code_check(int err_code, int exit_code)
 
 int	print_name(arg_t *data, uint32_t flags)
 {
-	if (data->path[0] == . && !(LS_OPTION_a & flags))
+	if (data->path[0] == '.' && !(LS_OPTION_a & flags))
 		return (0);
 	if (LS_OPTION_l & flags)
 	{
 		//OPTION
 		//write(1, )
 	}
+}
+
+int	check_dir_contents(cmd_t *ls, char *parent_path, char *path)
+{
+	DIR				*dir;
+	struct dirent	*elem;
+
+	dir = opendir(path);
+	if (!dir)
+	{
+		write(2, "Dir error\n", 10);
+		exit(1);
+	}
+	//if (ls->flags & LS_OPTION_R)
+	elem = readdir(dir);
+
+	if (elem->d_type == DT_DIR)
+	{
+		
+		if (ls->flags & LS_OPTION_R)
+			write(1, ls->parent_path, ft_strlen(ls->parent_path));
+		// show_contents(ls, );
+	}
+	while (elem != NULL)
+	{
+		//if (ls->flags & LS_OPTION_a)
+			write (1, elem->d_name, ft_strlen(elem->d_name));
+		// printf ("%ld\n%s\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_reclen, elem->d_type);
+		elem = readdir(dir);
+		if (elem != NULL)
+			write(1, " ", 1);
+	}
+	//printf ("%ld\n%s\n%hu\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_namlen, elem->d_reclen, elem->d_type);
+	closedir(dir);
 }
 
 int	show_contents(cmd_t *ls, t_list *node)
@@ -155,7 +189,7 @@ int	show_contents(cmd_t *ls, t_list *node)
 		write (2, "error stat\n", 11);
 		exit(2);
 	}
-	listxattr()
+	// listxattr(data->path, )
 	data->type = statbuf.st_mode & S_IFMT;
 	//switch (data->type)
 	//{
@@ -168,34 +202,7 @@ int	show_contents(cmd_t *ls, t_list *node)
 	//}
 	if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
 	{
-		DIR				*dir;
-		struct dirent	*elem;
-
-		dir = opendir(data->path);
-		if (!dir)
-		{
-			write(2, "Dir error\n", 10);
-			exit(1);
-		}
-		//if (ls->flags & LS_OPTION_R)
-		elem = readdir(dir);
-
-		if (elem->d_type == DT_DIR && ls->flags & LS_OPTION_R)
-		{
-			write(1, ls->parent_path, ft_strlen(ls->parent_path));
-			show_contents(ls, );
-		}
-		while (elem != NULL)
-		{
-			//if (ls->flags & LS_OPTION_a)
-				write (1, elem->d_name, ft_strlen(elem->d_name));
-			//printf ("%ld\n%s\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_reclen, elem->d_type);
-			elem = readdir(dir);
-			if (elem != NULL)
-				write(1, " ", 1);
-		}
-		//printf ("%ld\n%s\n%hu\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_namlen, elem->d_reclen, elem->d_type);
-		closedir(dir);
+		int ret = check_dir_contents(ls, data->path/*path*/);
 	}
 	//if ()
 	//printf ("%d\n", statbuf.st_mode & S_IRUSR);
