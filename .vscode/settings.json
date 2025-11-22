@@ -9,6 +9,8 @@
 	],
 	"files.associations": {
 		"*.conf": "bitbake",
-		"*.inc": "bitbake"
+		"*.inc": "bitbake",
+		"stdint.h": "c",
+		"libft.h": "c"
 	}
 }

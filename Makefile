@@ -1,17 +1,20 @@
 NAME	=	ft_ls
 CC		=	gcc
 CFLAGS	=	-fsanitize=address -g -Wall -Wextra #-Werror
-SRCS	=	$(wildcard *.c)
+SRC_DIR	=	src
+SRCS	=	$(wildcard $(SRC_DIR)/*.c)
 OBJDIR	=	obj
-OBJS	=	$(SRCS:%.c=$(OBJDIR)/%.o)
+OBJS	=	$(SRCS:$(SRC_DIR)/%.c=$(OBJDIR)/%.o)
 LIBFT	=	libft
-INCS	=	-I $(LIBFT)
+INC_DIR	=	includes
+INCS	=	-I $(LIBFT) -I $(INC_DIR)
 LINKS	=	-L $(LIBFT) -lm -lft
+
 
 all: $(OBJDIR) run_libft $(NAME)
 
 $(OBJDIR):
-	mkdir -p $(OBJDIR)
+	@mkdir -p $(OBJDIR)
 
 run_libft:
 	@make -C $(LIBFT) all
@@ -20,7 +23,7 @@ run_libft:
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME) $(LINKS)
 
-$(OBJDIR)/%.o: %.c ls.h Makefile
+$(OBJDIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/ls.h Makefile
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
 clean:
@@ -31,4 +34,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all $(OBJDIR) $(NAME) clean fclean $(OBJDIR)
+.PHONY: all clean fclean re

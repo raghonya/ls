@@ -1,17 +1,17 @@
 #include "ls.h"
 
-void	err_exit(int ret_code, char *message)
-{
+// void	err_exit(int ret_code, char *message)
+// {
 	
-}
+// }
 
-off_t math_ceil(off_t divisible)
-{
-	off_t	divider;
+// off_t math_ceil(off_t divisible)
+// {
+// 	off_t	divider;
 
-	divider = 4096;
+// 	divider = 4096;
 	
-}
+// }
 
 void	handle_l()
 {

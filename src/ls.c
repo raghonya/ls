@@ -1,0 +1,248 @@
+#include "ls.h"
+
+/*
+◦ write
+◦ opendir
+◦ readdir
+◦ closedir
+◦ stat
+◦ lstat
+◦ getpwuid
+◦ getgrgid
+◦ listxattr
+◦ getxattr
+◦ time
+◦ ctime
+◦ readlink
+◦ malloc
+◦ free
+◦ perror
+◦ strerror
+◦ exit
+
+*/
+
+//int	initialize(cmd_t *ls)
+//{
+//	ls->args = NULL;
+
+//}
+
+// void add_elem_to_str(char *s, int len, char to_be_added)
+// {
+// 	int i = 0;
+
+// 	while (i < len && s[i])
+// 		i++;
+// 	if (i < len)
+// 	{
+// 		s[i] = to_be_added;
+// 		s[i + 1] = 0;
+// 	}
+// }
+
+void return_code_check(int err_code, int exit_code)
+{
+	char	*err_message = "";
+
+	switch(err_code)
+	{
+		case LS_ERR_INVALID_OPTION:
+			//err_message = LS_ERR_MESSAGE_INVALID_OPTION; //pti poxvi code y flagi het
+			//printf ("ooooo\n");
+			break;
+	}
+	err_message = "yo";
+	ft_putendl_fd(err_message, STDERR_FILENO);
+	exit(exit_code); // nned to be changed
+}
+
+//int	handle_recursion(cmd_t *ls)
+//{
+
+//	return (0);
+//}
+
+int	print_name(arg_t *data, uint32_t flags)
+{
+	int	ret;
+
+	ret = 0;
+	if (data->path[0] == '.' && !(LS_OPTION_a & flags))
+		return (0);
+	if (LS_OPTION_l & flags)
+	{
+		//OPTION
+		//write(1, )
+	}
+	return (ret);
+}
+
+int	check_dir_contents(t_list **subdirs, char *parent_path, char *path, uint32_t flags)
+{
+	DIR				*dir;
+	struct dirent	*elem;
+
+	dir = opendir(path);
+	if (!dir)
+	{
+		write(2, "Dir error\n", 10);
+		exit(1);
+	}
+	//if (ls->flags & LS_OPTION_R)
+	elem = readdir(dir);
+	if (elem->d_type == DT_DIR)
+	{
+		if (flags & LS_OPTION_R)
+		{
+			write(1, parent_path, ft_strlen(parent_path));
+			write(1, ":\n", 2);
+		}
+		// show_contents(ls, );
+	}
+	while (elem != NULL)
+	{
+		//if (flags & LS_OPTION_a)
+		write (1, elem->d_name, ft_strlen(elem->d_name));
+		write (1, "\n", 1);
+		// printf ("%ld\n%s\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_reclen, elem->d_type);
+		// printf ("parent path is '%s'\npath is '%s'\nelem name is '%s'\n\n", parent_path, path, elem->d_name);
+		if (elem->d_type == DT_DIR && flags & LS_OPTION_R && ft_strcmp(elem->d_name, ".") != 0 && ft_strcmp(elem->d_name, "..") != 0)
+		{
+			char *new_path, *tmp;
+			// new_path = strdup(elem->d_name);
+			// new_path = ft_strjoin(parent_path, "/");
+			new_path = ft_strjoin(path, "/");
+			tmp = new_path;
+			// new_path = ft_strjoin(new_path, path);
+			// free(tmp);
+			// tmp = new_path;
+			// new_path = ft_strjoin(new_path, "/");
+			// free(tmp);
+			// tmp = new_path;
+			new_path = ft_strjoin(new_path, elem->d_name);
+			free(tmp);
+			// printf ("newpath: '%s'\n", new_path);
+			ft_lstadd_back(subdirs, ft_lstnew(create_arg(new_path)));
+			// ft_lstadd_back(subdirs, ft_lstnew(create_arg(elem->d_name)));
+			// (*node) = (*node)->next;
+		}
+
+		// add to list
+		
+		elem = readdir(dir);
+		// if (elem != NULL)
+		// 	write(1, " ", 1);
+	}
+	//printf ("%ld\n%s\n%hu\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_namlen, elem->d_reclen, elem->d_type);
+	closedir(dir);
+	write(1, "\n", 1);
+	// print from sorted list
+	
+	return (0);
+}
+
+int	show_contents(t_list **node, char *parent_path, uint32_t flags)
+{
+	struct stat	statbuf;
+	arg_t		*data = (*node)->data;
+	int			ret;
+	t_list		*subdirs;
+
+	subdirs = NULL;
+	printf ("in show contents, data path is '%s'\n", data->path);
+	if (lstat(data->path, &statbuf) != 0)
+	{
+		write (2, "Error stat\n", 11);
+		write(1, data->path, ft_strlen(data->path));
+		exit(2);
+	}
+	// listxattr(data->path, )
+	data->type = statbuf.st_mode & S_IFMT;
+	if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
+	{
+		ret = check_dir_contents(&subdirs, parent_path, data->path, flags);
+		if (subdirs != NULL)
+		{
+			show_contents(&subdirs, parent_path, flags);
+		}
+		t_list	*tmp;
+		while (subdirs)
+		{
+			tmp = subdirs->next;
+			// free all mallocs inside
+			free(((arg_t *)subdirs->data)->path);
+			free(subdirs->data);
+			free(subdirs);
+			subdirs = tmp;
+		}
+	}
+//}
+	//exit(1);
+	return (ret);
+}
+
+int	main(int argc, char **argv)
+{
+	cmd_t	*ls = malloc(sizeof(cmd_t));
+	int		ret;
+
+	if (argc < 1)
+		return (1);
+	//ls->used_flags[0] = 0;
+	// for (int i = 0; argv[i]; ++i)
+	// {
+	// 	printf ("%s\n", argv[i]);
+	// }
+	ls->flags = 0;
+	ls->arg = NULL;
+	ret = arg_parse(ls, argc, argv);
+	if (ret) return_code_check(ls->return_code, ret);
+	if (ls->arg == NULL)
+		add_arg(ls, ".");
+	printf ("%d\n", ls->flags);
+
+
+	t_list	*tmp_arg = ls->arg;
+	while (tmp_arg)
+	{
+		// printf ("aloooooo \n\n\n%s\n\n\n\n", ((arg_t *)tmp_arg->data)->path);
+		// t_list	*cur_folder = ft_lstnew(tmp_arg);
+		ls->parent_path = ((arg_t *)tmp_arg->data)->path;
+		ret = show_contents(&tmp_arg, ls->parent_path, ls->flags);
+		tmp_arg = tmp_arg->next;
+	}
+
+
+	// if (ret)
+		// err_exit(ret, "error");
+
+	//if (ls->flags & LS_OPTION_R)
+	//	handle_recursion(ls);
+
+	//tmp
+	while (ls->arg != NULL)
+	{
+		t_list *tmp = ls->arg;
+		ls->arg = ls->arg->next;
+		free(tmp->data);
+		free(tmp);
+	}
+	//tmp
+	free(ls);
+	return (0);
+}
+
+//int main()
+//{
+//	char *a = "";
+//	int i;
+//	a = malloc(sizeof(char) * 8 + 1);
+//	for (i = 0; i < 8; ++i)
+//		a[i] = i + 48;
+//	a[i] = 0;
+//	printf ("%s\n", a);
+//	//printf ("%d\n", sizeof(a) / sizeof(int));
+//	//printf ("%d\n", sizeof(a));
+//	//printf ("%d\n", sizeof(int));
+//}

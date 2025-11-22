@@ -92,6 +92,9 @@ typedef struct cmd_t
 } cmd_t;
 
 void	err_exit(int ret_code, char *message);
+arg_t*	create_arg(char *path);
+int		add_arg(cmd_t *ls, char *path);
+int		arg_parse(cmd_t *ls, int argc, char **argv);
 
 arg_t	*node_new(char *path);
 void	node_add_back(arg_t **list, arg_t *new);
