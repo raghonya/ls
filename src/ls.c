@@ -63,7 +63,7 @@ void return_code_check(int err_code, int exit_code)
 //	return (0);
 //}
 
-int	print_name(char *name, uint32_t flags)
+int	print_name(char *name, int is_last, uint32_t flags)
 {
 	int	ret;
 
@@ -73,9 +73,13 @@ int	print_name(char *name, uint32_t flags)
 	if (LS_OPTION_l & flags)
 	{
 		// call function for -l flag output
-		// write(1, name, ft_strlen(name));
-		// write (1, "\n", 1);
 	}
+	else
+	{
+		write(1, name, ft_strlen(name));
+		if ()
+		write (1, " ", 1);
+	}	
 	return (ret);
 }
 
@@ -105,8 +109,8 @@ int	check_dir_contents(t_list **subdirs, char *parent_path, char *path, uint32_t
 			
 		// }
 
-		write (1, elem->d_name, ft_strlen(elem->d_name));
-		write (1, " ", 1);
+		// write (1, elem->d_name, ft_strlen(elem->d_name));
+		// write (1, " ", 1);
 		// write (1, " hey ", 5);
 		if (flags & LS_OPTION_l)
 			write (1, "\n", 1);
@@ -155,7 +159,7 @@ int	check_dir_contents(t_list **subdirs, char *parent_path, char *path, uint32_t
 	while (tmp)
 	{
 		// print from sorted list
-		print_name(tmp->data, flags);
+		print_name(tmp, tmp->next == NULL, flags);
 		tmp = tmp->next;
 	}
 	write (1, "\n\n", 2);
