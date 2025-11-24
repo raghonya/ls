@@ -23,11 +23,11 @@
 # define LS_ALLOWED_FLAGS			"lRart"
 # define LS_ALLOWED_FLAGS_COUNT		5
 
-# define LS_OPTION_l				0b00001
-# define LS_OPTION_R				0b00010
-# define LS_OPTION_a				0b00100
-# define LS_OPTION_r				0b01000
-# define LS_OPTION_t				0b10000
+# define LS_OPTION_l	0b00001
+# define LS_OPTION_R	0b00010
+# define LS_OPTION_a	0b00100
+# define LS_OPTION_r	0b01000
+# define LS_OPTION_t	0b10000
 
 //# define LS_ERR_MESSAGE_NO_SUCH_FILE_OR_DIRECTORY "ls: cannot access '': No such file or directory"
 
@@ -57,11 +57,6 @@ typedef enum arg_type_t
 	LINK = S_IFLNK,
 	BLOCK_DEV = S_IFBLK,
 	CHARACTER_DEV = S_IFCHR
-	//S_IFBLK,
-	//S_IFLNK,
-	//S_IFCHR,
-	//S_IFDIR,
-	//S_IFREG
 } arg_type_t;
 
 typedef struct arg_t
@@ -75,7 +70,6 @@ typedef struct arg_t
 	char			*time_last_modif;
 	char			*path;
 	off_t			blocks;
-	//struct arg_t	*next;
 } arg_t;
 
 typedef struct cmd_t
@@ -99,4 +93,6 @@ int		arg_parse(cmd_t *ls, int argc, char **argv);
 arg_t	*node_new(char *path);
 void	node_add_back(arg_t **list, arg_t *new);
 
-#endif 
+#endif
+
+void grno(DIR *dir);

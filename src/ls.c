@@ -63,17 +63,18 @@ void return_code_check(int err_code, int exit_code)
 //	return (0);
 //}
 
-int	print_name(arg_t *data, uint32_t flags)
+int	print_name(char *name, uint32_t flags)
 {
 	int	ret;
 
 	ret = 0;
-	if (data->path[0] == '.' && !(LS_OPTION_a & flags))
+	if (name[0] == '.' && !(LS_OPTION_a & flags))
 		return (0);
 	if (LS_OPTION_l & flags)
 	{
-		//OPTION
-		//write(1, )
+		// call function for -l flag output
+		// write(1, name, ft_strlen(name));
+		// write (1, "\n", 1);
 	}
 	return (ret);
 }
@@ -82,62 +83,82 @@ int	check_dir_contents(t_list **subdirs, char *parent_path, char *path, uint32_t
 {
 	DIR				*dir;
 	struct dirent	*elem;
+	t_list			*order;
 
+	order = NULL;
 	dir = opendir(path);
 	if (!dir)
 	{
 		write(2, "Dir error\n", 10);
 		exit(1);
 	}
-	//if (ls->flags & LS_OPTION_R)
 	elem = readdir(dir);
-	if (elem->d_type == DT_DIR)
+	if (flags & LS_OPTION_R)
 	{
-		if (flags & LS_OPTION_R)
-		{
-			write(1, parent_path, ft_strlen(parent_path));
-			write(1, ":\n", 2);
-		}
-		// show_contents(ls, );
+		write(1, path, ft_strlen(path));
+		write(1, ":\n", 2);
 	}
 	while (elem != NULL)
 	{
-		//if (flags & LS_OPTION_a)
+		// if (LS_OPTION_l & flags)
+		// {
+			
+		// }
+
 		write (1, elem->d_name, ft_strlen(elem->d_name));
-		write (1, "\n", 1);
-		// printf ("%ld\n%s\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_reclen, elem->d_type);
+		write (1, " ", 1);
+		// write (1, " hey ", 5);
+		if (flags & LS_OPTION_l)
+			write (1, "\n", 1);
 		// printf ("parent path is '%s'\npath is '%s'\nelem name is '%s'\n\n", parent_path, path, elem->d_name);
-		if (elem->d_type == DT_DIR && flags & LS_OPTION_R && ft_strcmp(elem->d_name, ".") != 0 && ft_strcmp(elem->d_name, "..") != 0)
+		if (elem->d_type == DT_DIR && flags & LS_OPTION_R \
+			&& ft_strcmp(elem->d_name, ".") != 0 \
+			&& ft_strcmp(elem->d_name, "..") != 0)
 		{
 			char *new_path, *tmp;
-			// new_path = strdup(elem->d_name);
 			// new_path = ft_strjoin(parent_path, "/");
+			// if (path[ft_strlen(path) - 1] == '/')
+			// 	new_path = ft_strdup(path);
+			// else
+				// new_path = ft_strjoin(path, "/");
+		
 			new_path = ft_strjoin(path, "/");
 			tmp = new_path;
-			// new_path = ft_strjoin(new_path, path);
-			// free(tmp);
-			// tmp = new_path;
-			// new_path = ft_strjoin(new_path, "/");
-			// free(tmp);
-			// tmp = new_path;
 			new_path = ft_strjoin(new_path, elem->d_name);
 			free(tmp);
 			// printf ("newpath: '%s'\n", new_path);
 			ft_lstadd_back(subdirs, ft_lstnew(create_arg(new_path)));
-			// ft_lstadd_back(subdirs, ft_lstnew(create_arg(elem->d_name)));
-			// (*node) = (*node)->next;
 		}
 
-		// add to list
-		
+		ft_lstadd_back(&order, ft_lstnew(ft_strdup(elem->d_name)));
+
+		// if (flags & LS_OPTION_t)
+		// 	ft_lstadd_back(); // add to list with time sorting
+		// else if (flags & LS_OPTION_r)
+			// add to list backwards
+		// else
+			// add to list
+
 		elem = readdir(dir);
 		// if (elem != NULL)
 		// 	write(1, " ", 1);
 	}
 	//printf ("%ld\n%s\n%hu\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_namlen, elem->d_reclen, elem->d_type);
 	closedir(dir);
-	write(1, "\n", 1);
-	// print from sorted list
+	// write(1, "\n", 1);
+	// while ()
+	
+	// sort list with time or just like normal ls order
+	
+	t_list	*tmp;
+	tmp = order;
+	while (tmp)
+	{
+		// print from sorted list
+		print_name(tmp->data, flags);
+		tmp = tmp->next;
+	}
+	write (1, "\n\n", 2);
 	
 	return (0);
 }
@@ -148,9 +169,11 @@ int	show_contents(t_list **node, char *parent_path, uint32_t flags)
 	arg_t		*data = (*node)->data;
 	int			ret;
 	t_list		*subdirs;
+	t_list		*tmp;
+
 
 	subdirs = NULL;
-	printf ("in show contents, data path is '%s'\n", data->path);
+	// printf ("in show contents, data path is '%s'\n", data->path);
 	if (lstat(data->path, &statbuf) != 0)
 	{
 		write (2, "Error stat\n", 11);
@@ -159,25 +182,26 @@ int	show_contents(t_list **node, char *parent_path, uint32_t flags)
 	}
 	// listxattr(data->path, )
 	data->type = statbuf.st_mode & S_IFMT;
-	if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
+	if (data->type == S_IFDIR)
 	{
 		ret = check_dir_contents(&subdirs, parent_path, data->path, flags);
-		if (subdirs != NULL)
-		{
-			show_contents(&subdirs, parent_path, flags);
-		}
-		t_list	*tmp;
-		while (subdirs)
-		{
-			tmp = subdirs->next;
-			// free all mallocs inside
-			free(((arg_t *)subdirs->data)->path);
-			free(subdirs->data);
-			free(subdirs);
-			subdirs = tmp;
-		}
+		// tmp = subdirs;
+		// while (tmp)
+		// {
+		// 	printf ("subdirs: `%s`\n", ((arg_t *)tmp->data)->path);
+		// 	tmp = tmp->next;
+		// }
 	}
-//}
+	while (subdirs != NULL)
+	{
+		show_contents(&subdirs, parent_path, flags);
+		tmp = subdirs->next;
+		// free all mallocs inside
+		free(((arg_t *)subdirs->data)->path);
+		free(subdirs->data);
+		free(subdirs);
+		subdirs = tmp;
+	}
 	//exit(1);
 	return (ret);
 }
@@ -212,15 +236,8 @@ int	main(int argc, char **argv)
 		ret = show_contents(&tmp_arg, ls->parent_path, ls->flags);
 		tmp_arg = tmp_arg->next;
 	}
-
-
 	// if (ret)
 		// err_exit(ret, "error");
-
-	//if (ls->flags & LS_OPTION_R)
-	//	handle_recursion(ls);
-
-	//tmp
 	while (ls->arg != NULL)
 	{
 		t_list *tmp = ls->arg;
