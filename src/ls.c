@@ -22,12 +22,6 @@
 
 */
 
-//int	initialize(cmd_t *ls)
-//{
-//	ls->args = NULL;
-
-//}
-
 // void add_elem_to_str(char *s, int len, char to_be_added)
 // {
 // 	int i = 0;
@@ -77,17 +71,25 @@ int	print_name(char *name, int is_last, uint32_t flags)
 	else
 	{
 		write(1, name, ft_strlen(name));
-		if ()
-		write (1, " ", 1);
+		if (!is_last)
+			write (1, " ", 1);
 	}	
 	return (ret);
 }
 
-int	check_dir_contents(t_list **subdirs, char *parent_path, char *path, uint32_t flags)
+int	expand_output(t_list *entity)
+{
+	struct passwd	*ent_pass;
+
+	// ent_pass = getpwuid()
+}
+
+int	check_dir_contents(t_list **subdirs, struct stat *statbuf, t_list *parent_node, uint32_t flags)
 {
 	DIR				*dir;
 	struct dirent	*elem;
 	t_list			*order;
+	char			*path = ((arg_t *)parent_node->data)->path;
 
 	order = NULL;
 	dir = opendir(path);
@@ -104,27 +106,13 @@ int	check_dir_contents(t_list **subdirs, char *parent_path, char *path, uint32_t
 	}
 	while (elem != NULL)
 	{
-		// if (LS_OPTION_l & flags)
-		// {
-			
-		// }
-
-		// write (1, elem->d_name, ft_strlen(elem->d_name));
-		// write (1, " ", 1);
-		// write (1, " hey ", 5);
 		if (flags & LS_OPTION_l)
 			write (1, "\n", 1);
-		// printf ("parent path is '%s'\npath is '%s'\nelem name is '%s'\n\n", parent_path, path, elem->d_name);
 		if (elem->d_type == DT_DIR && flags & LS_OPTION_R \
 			&& ft_strcmp(elem->d_name, ".") != 0 \
 			&& ft_strcmp(elem->d_name, "..") != 0)
 		{
 			char *new_path, *tmp;
-			// new_path = ft_strjoin(parent_path, "/");
-			// if (path[ft_strlen(path) - 1] == '/')
-			// 	new_path = ft_strdup(path);
-			// else
-				// new_path = ft_strjoin(path, "/");
 		
 			new_path = ft_strjoin(path, "/");
 			tmp = new_path;
@@ -135,36 +123,48 @@ int	check_dir_contents(t_list **subdirs, char *parent_path, char *path, uint32_t
 		}
 
 		ft_lstadd_back(&order, ft_lstnew(ft_strdup(elem->d_name)));
+		if (LS_OPTION_l & flags)
+		{
+			// fill_info(ft_lstlast(*subdirs), statbuf);
+		}
 
-		// if (flags & LS_OPTION_t)
-		// 	ft_lstadd_back(); // add to list with time sorting
-		// else if (flags & LS_OPTION_r)
-			// add to list backwards
-		// else
-			// add to list
 
 		elem = readdir(dir);
 		// if (elem != NULL)
 		// 	write(1, " ", 1);
 	}
-	//printf ("%ld\n%s\n%hu\n%hu\n%u\n", elem->d_ino, elem->d_name, elem->d_namlen, elem->d_reclen, elem->d_type);
+	// if (flags & LS_OPTION_t)
+	// 	; sort list with time sorting
+	// else if (flags & LS_OPTION_r)
+		// sort list backwards
+	// else
+		// sort list like normal
 	closedir(dir);
 	// write(1, "\n", 1);
 	// while ()
-	
-	// sort list with time or just like normal ls order
-	
 	t_list	*tmp;
 	tmp = order;
 	while (tmp)
 	{
 		// print from sorted list
-		print_name(tmp, tmp->next == NULL, flags);
+		print_name(tmp->data, tmp->next == NULL, flags);
 		tmp = tmp->next;
 	}
 	write (1, "\n\n", 2);
 	
 	return (0);
+}
+
+int	format_output(t_list **subdirs, struct stat *statbuf, t_list *parent_node, uint32_t flags)
+{
+	if ((statbuf->st_mode & S_IFMT) == S_IFDIR)
+	{
+		check_dir_contents(subdirs, statbuf, parent_node, flags);
+	}
+	else
+	{
+		// check_file();
+	}
 }
 
 int	show_contents(t_list **node, char *parent_path, uint32_t flags)
@@ -175,7 +175,6 @@ int	show_contents(t_list **node, char *parent_path, uint32_t flags)
 	t_list		*subdirs;
 	t_list		*tmp;
 
-
 	subdirs = NULL;
 	// printf ("in show contents, data path is '%s'\n", data->path);
 	if (lstat(data->path, &statbuf) != 0)
@@ -184,17 +183,46 @@ int	show_contents(t_list **node, char *parent_path, uint32_t flags)
 		write(1, data->path, ft_strlen(data->path));
 		exit(2);
 	}
+
+	// printf ("%lu\n", statbuf.st_atim);
+	// printf ("%ld\n", statbuf.st_blksize);
+	// printf ("%ld\n", statbuf.st_size);
+	// printf ("%d\n", statbuf.st_uid);
+	// printf ("%u\n", statbuf.st_atimensec);
+
 	// listxattr(data->path, )
+	// printf("Mode:                     %x (octal)\n",
+	// 		statbuf.st_mode);
+	// printf("Link count:               %ju\n", (uintmax_t) statbuf.st_nlink);
+	// printf("Ownership:                UID=%ju   GID=%ju\n",
+	// 		(uintmax_t) statbuf.st_uid, (uintmax_t) statbuf.st_gid);
+	// printf("File size:                %jd bytes\n",
+	// 		(intmax_t) statbuf.st_size);
+	// printf("Last status change:       %s", ctime(&statbuf.st_ctime));
+	// printf("Last file access:         %s", ctime(&statbuf.st_atime));
+	// printf("Last file modification:   %s", ctime(&statbuf.st_mtime));
+	struct passwd	*usr_pwd;
+	struct group	*grp_pwd;
+
+	usr_pwd = getpwuid(statbuf.st_uid);
+	printf ("%s\n", usr_pwd->pw_name);
+	grp_pwd = getgrgid(statbuf.st_gid);
+	printf ("%s\n", grp_pwd->gr_name);
 	data->type = statbuf.st_mode & S_IFMT;
+	format_output(&subdirs, &statbuf, *node, flags);
 	if (data->type == S_IFDIR)
 	{
-		ret = check_dir_contents(&subdirs, parent_path, data->path, flags);
+		ret = check_dir_contents(&subdirs, &statbuf, *node, flags);
 		// tmp = subdirs;
 		// while (tmp)
 		// {
 		// 	printf ("subdirs: `%s`\n", ((arg_t *)tmp->data)->path);
 		// 	tmp = tmp->next;
 		// }
+	}
+	else
+	{
+
 	}
 	while (subdirs != NULL)
 	{
@@ -217,11 +245,6 @@ int	main(int argc, char **argv)
 
 	if (argc < 1)
 		return (1);
-	//ls->used_flags[0] = 0;
-	// for (int i = 0; argv[i]; ++i)
-	// {
-	// 	printf ("%s\n", argv[i]);
-	// }
 	ls->flags = 0;
 	ls->arg = NULL;
 	ret = arg_parse(ls, argc, argv);
@@ -234,8 +257,6 @@ int	main(int argc, char **argv)
 	t_list	*tmp_arg = ls->arg;
 	while (tmp_arg)
 	{
-		// printf ("aloooooo \n\n\n%s\n\n\n\n", ((arg_t *)tmp_arg->data)->path);
-		// t_list	*cur_folder = ft_lstnew(tmp_arg);
 		ls->parent_path = ((arg_t *)tmp_arg->data)->path;
 		ret = show_contents(&tmp_arg, ls->parent_path, ls->flags);
 		tmp_arg = tmp_arg->next;

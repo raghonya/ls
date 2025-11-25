@@ -11,6 +11,10 @@
 		"*.conf": "bitbake",
 		"*.inc": "bitbake",
 		"stdint.h": "c",
-		"libft.h": "c"
+		"libft.h": "c",
+		"ls.h": "c",
+		"stdio.h": "c",
+		"unistd.h": "c",
+		"ostream": "cpp"
 	}
 }

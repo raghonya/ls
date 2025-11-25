@@ -1,3 +1,7 @@
+*.c
+*.cpp
+*.o
+
 # Prerequisites
 *.d
 
