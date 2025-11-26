@@ -52,6 +52,49 @@ void return_code_check(int err_code, int exit_code)
 	exit(exit_code); // nned to be changed
 }
 
+int		read_link(char *link, struct stat *statbuf)
+{
+
+	char	*buf;
+	ssize_t	bufsiz, nbytes;
+
+	bufsiz = statbuf->st_size + 1;
+
+	/* Some magic symlinks under (for example) /proc and /sys
+		report 'st_size' as zero. In that case, take PATH_MAX as
+		a "good enough" estimate. */
+
+	if (statbuf->st_size == 0)
+		bufsiz = PATH_MAX;
+
+	buf = malloc(bufsiz);
+	if (buf == NULL) {
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+
+	nbytes = readlink(link, buf, bufsiz);
+	if (nbytes == -1) {
+		perror("readlink");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Print only 'nbytes' of 'buf', as it doesn't contain a terminating
+		null byte ('\0'). */
+	printf("'%s' points to '%.*s'\n", link, (int) nbytes, buf);
+
+	/* If the return value was equal to the buffer size, then
+		the link target was larger than expected (perhaps because the
+		target was changed between the call to lstat() and the call to
+		readlink()). Warn the user that the returned target may have
+		been truncated. */
+
+	// if (nbytes == bufsiz)
+	// 	printf("(Returned buffer may have been truncated)\n");
+
+	free(buf);
+}
+
 int	print_name(arg_t *arg, int is_last, uint32_t flags)
 {
 	int			ret;
@@ -59,7 +102,8 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 	char		permissions[11] = "-rwxrwxrwx";
 
 	ret = 0;
-	// printf ("name: %s\n", arg->path);
+	// printf ("path: %s\n", arg->path);
+	// printf ("name: %s\n", arg->name);
 	if (arg->name[0] == '.' && !(LS_OPTION_a & flags))
 		return (0);
 	if (LS_OPTION_l & flags)
@@ -114,6 +158,10 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 
 		write(1, arg->name, ft_strlen(arg->name));
 		write(1, "\n", 1);
+		if ((statbuf.st_mode & S_IFMT) == LINK)
+		{
+			read_link(arg->path, &statbuf);
+		}
 		// printf("%x", statbuf.st_mode); +++++++
 		// printf(" %ju", (uintmax_t)statbuf.st_nlink); +++++++
 		// printf (" %s", usr_pwd->pw_name); +++++++
@@ -186,10 +234,10 @@ int	check_dir_contents(t_list **subdirs, struct stat *statbuf, t_list *parent_no
 		&& ft_strcmp(elem->d_name, ".") != 0 \
 		&& ft_strcmp(elem->d_name, "..") != 0)
 		{
-			ft_lstadd_back(subdirs, ft_lstnew(create_arg(new_path, elem->d_name)));
+			ft_lstadd_back(subdirs, ft_lstnew(create_arg(new_path, ft_strdup(elem->d_name))));
 		}
-
-		ft_lstadd_back(&order, ft_lstnew(create_arg(new_path, elem->d_name)));
+		// printf("elem name: '%s'\n", elem->d_name);
+		ft_lstadd_back(&order, ft_lstnew(create_arg(new_path, ft_strdup(elem->d_name))));
 		// ((arg_t *)(ft_lstlast(order)->data))->type = statbuf->st_mode & S_IFMT;
 		elem = readdir(dir);
 	}
@@ -204,6 +252,12 @@ int	check_dir_contents(t_list **subdirs, struct stat *statbuf, t_list *parent_no
 	t_list	*tmp;
 	while (order)
 	{
+		// tmp = order;
+		// while (tmp)
+		// {
+		// 	printf ("name, path: '%s', '%s'\n", ((arg_t *)tmp->data)->name, ((arg_t *)tmp->data)->path);
+		// 	tmp = tmp->next;
+		// }
 		// print from sorted list
 		print_name(order->data, order->next == NULL, flags);
 		tmp = order;
