@@ -34,6 +34,7 @@
 // 		s[i + 1] = 0;
 // 	}
 // }
+int	show_contents(t_list **node, char *parent_path, uint32_t flags);
 
 void return_code_check(int err_code, int exit_code)
 {
@@ -51,37 +52,104 @@ void return_code_check(int err_code, int exit_code)
 	exit(exit_code); // nned to be changed
 }
 
-//int	handle_recursion(cmd_t *ls)
-//{
-
-//	return (0);
-//}
-
-int	print_name(char *name, int is_last, uint32_t flags)
+int	print_name(arg_t *arg, int is_last, uint32_t flags)
 {
-	int	ret;
+	int			ret;
+	struct stat	statbuf;
+	char		permissions[11] = "-rwxrwxrwx";
 
 	ret = 0;
-	if (name[0] == '.' && !(LS_OPTION_a & flags))
+	// printf ("name: %s\n", arg->path);
+	if (arg->name[0] == '.' && !(LS_OPTION_a & flags))
 		return (0);
 	if (LS_OPTION_l & flags)
 	{
+		if (lstat(arg->path, &statbuf) != 0)
+		{
+			write (2, "Error stat\n", 11);
+			write(1, arg->path, ft_strlen(arg->path));
+			return (2);
+		}
+		switch (statbuf.st_mode & S_IFMT)
+		{
+			case FILETYPE:	break;
+			case BLK_DEV:	permissions[0] = 'b'; break;
+			case CHAR_DEV:	permissions[0] = 'c'; break;
+			case DIRECTORY:	permissions[0] = 'd'; break;
+			case FIFO:		permissions[0] = 'p'; break;
+			case LINK:		permissions[0] = 'l'; break;
+			case SOCK:		permissions[0] = 's'; break;
+			default:		permissions[0] = '?'; break;
+		}
+		char * tmp = ctime(&statbuf.st_mtime);
+		struct passwd	*usr_pwd;
+		struct group	*grp_pwd;
+
+		usr_pwd = getpwuid(statbuf.st_uid);
+		grp_pwd = getgrgid(statbuf.st_gid);
+
+		write(1, permissions, ft_strlen(permissions));
+		write(1, " ", 1);
+
+		char *tmp2;
+		tmp2 = ft_itoa((uintmax_t)statbuf.st_nlink);
+		write(1, tmp2, ft_strlen(tmp2));
+		write(1, " ", 1);
+		free(tmp2);
+
+		write(1, usr_pwd->pw_name, ft_strlen(usr_pwd->pw_name));
+		write(1, " ", 1);
+
+		write(1, grp_pwd->gr_name, ft_strlen(grp_pwd->gr_name));
+		write(1, " ", 1);
+
+		tmp2 = ft_itoa((intmax_t) statbuf.st_size);
+		write(1, tmp2, ft_strlen(tmp2));
+		write(1, " ", 1);
+		free(tmp2);
+
+		tmp2 = ctime(&statbuf.st_mtime);
+		write(1, tmp2, ft_strlen(tmp2) - 1);
+		write(1, " ", 1);
+
+		write(1, arg->name, ft_strlen(arg->name));
+		write(1, "\n", 1);
+		// printf("%x", statbuf.st_mode); +++++++
+		// printf(" %ju", (uintmax_t)statbuf.st_nlink); +++++++
+		// printf (" %s", usr_pwd->pw_name); +++++++
+		// printf (" %s", grp_pwd->gr_name); +++++++
+		// printf(" %jd", (intmax_t) statbuf.st_size); +++++++
+		// printf(" %s ", ctime(&statbuf.st_mtime)); 
+		
+		// printf("Mode: %x\n", statbuf.st_mode);
+		// printf("Link count:               %ju\n", (uintmax_t) statbuf.st_nlink);
+		// printf ("%s\n", usr_pwd->pw_arg->path);
+		// printf ("%s\n", grp_pwd->gr_arg->path);
+		// printf("Last file modification:   %s", ctime(&statbuf.st_mtime));
+		// printf("Ownership:                UID=%ju   GID=%ju\n",
+		// 		(uintmax_t) statbuf.st_uid, (uintmax_t) statbuf.st_gid);
+		// printf("File size:                %jd bytes\n",
+		// 		(intmax_t) statbuf.st_size);
+
+
 		// call function for -l flag output
 	}
 	else
 	{
-		write(1, name, ft_strlen(name));
+		write(1, arg->path, ft_strlen(arg->path));
 		if (!is_last)
 			write (1, " ", 1);
 	}	
 	return (ret);
 }
 
-int	expand_output(t_list *entity)
+void	slice_last_chars(char **str, char c)
 {
-	struct passwd	*ent_pass;
+	int	len;
 
-	// ent_pass = getpwuid()
+	len = ft_strlen(*str);
+	for (int i = len - 1; i >= 0 && *(*str + i) == c; --i)
+		*(*str + i) = 0;
 }
 
 int	check_dir_contents(t_list **subdirs, struct stat *statbuf, t_list *parent_node, uint32_t flags)
@@ -104,34 +172,26 @@ int	check_dir_contents(t_list **subdirs, struct stat *statbuf, t_list *parent_no
 		write(1, path, ft_strlen(path));
 		write(1, ":\n", 2);
 	}
+	slice_last_chars(&path, '/');
 	while (elem != NULL)
 	{
-		if (flags & LS_OPTION_l)
-			write (1, "\n", 1);
-		if (elem->d_type == DT_DIR && flags & LS_OPTION_R \
-			&& ft_strcmp(elem->d_name, ".") != 0 \
-			&& ft_strcmp(elem->d_name, "..") != 0)
+		// if (flags & LS_OPTION_l)
+		// 	write (1, "\n", 1);
+		char *new_path, *tmp;
+		new_path = ft_strjoin(path, "/");
+		tmp = new_path;
+		new_path = ft_strjoin(new_path, elem->d_name);
+		free(tmp);
+		if ((flags & LS_OPTION_R) && elem->d_type == DT_DIR \
+		&& ft_strcmp(elem->d_name, ".") != 0 \
+		&& ft_strcmp(elem->d_name, "..") != 0)
 		{
-			char *new_path, *tmp;
-		
-			new_path = ft_strjoin(path, "/");
-			tmp = new_path;
-			new_path = ft_strjoin(new_path, elem->d_name);
-			free(tmp);
-			// printf ("newpath: '%s'\n", new_path);
-			ft_lstadd_back(subdirs, ft_lstnew(create_arg(new_path)));
+			ft_lstadd_back(subdirs, ft_lstnew(create_arg(new_path, elem->d_name)));
 		}
 
-		ft_lstadd_back(&order, ft_lstnew(ft_strdup(elem->d_name)));
-		if (LS_OPTION_l & flags)
-		{
-			// fill_info(ft_lstlast(*subdirs), statbuf);
-		}
-
-
+		ft_lstadd_back(&order, ft_lstnew(create_arg(new_path, elem->d_name)));
+		// ((arg_t *)(ft_lstlast(order)->data))->type = statbuf->st_mode & S_IFMT;
 		elem = readdir(dir);
-		// if (elem != NULL)
-		// 	write(1, " ", 1);
 	}
 	// if (flags & LS_OPTION_t)
 	// 	; sort list with time sorting
@@ -139,31 +199,54 @@ int	check_dir_contents(t_list **subdirs, struct stat *statbuf, t_list *parent_no
 		// sort list backwards
 	// else
 		// sort list like normal
+
 	closedir(dir);
-	// write(1, "\n", 1);
-	// while ()
 	t_list	*tmp;
-	tmp = order;
-	while (tmp)
+	while (order)
 	{
 		// print from sorted list
-		print_name(tmp->data, tmp->next == NULL, flags);
-		tmp = tmp->next;
+		print_name(order->data, order->next == NULL, flags);
+		tmp = order;
+		order = order->next;
+		// free(((arg_t *)tmp->data)->path);
+		free(tmp->data);
+		free(tmp);
 	}
-	write (1, "\n\n", 2);
+	write (1, "\n", 1);
 	
 	return (0);
 }
 
 int	format_output(t_list **subdirs, struct stat *statbuf, t_list *parent_node, uint32_t flags)
 {
-	if ((statbuf->st_mode & S_IFMT) == S_IFDIR)
+	int			ret;
+	arg_t		*data = ((arg_t *)parent_node->data);
+	t_list		*tmp;
+
+	ret = 0;
+	if (data->type == S_IFDIR)
 	{
-		check_dir_contents(subdirs, statbuf, parent_node, flags);
+		ret = check_dir_contents(subdirs, statbuf, parent_node, flags);
+		while (*subdirs != NULL)
+		{
+			// tmp = *subdirs;
+			// while (tmp)
+			// {
+			// 	printf ("%s\n", ((arg_t *)tmp->data)->path);
+			// 	tmp = tmp->next;
+			// }
+			show_contents(subdirs, data->path, flags);
+			tmp = (*subdirs)->next;
+			// free all mallocs inside
+			free(((arg_t *)(*subdirs)->data)->path);
+			free((*subdirs)->data);
+			free(*subdirs);
+			(*subdirs) = tmp;
+		}
 	}
 	else
 	{
-		// check_file();
+		print_name(data, 0, flags);
 	}
 }
 
@@ -173,7 +256,6 @@ int	show_contents(t_list **node, char *parent_path, uint32_t flags)
 	arg_t		*data = (*node)->data;
 	int			ret;
 	t_list		*subdirs;
-	t_list		*tmp;
 
 	subdirs = NULL;
 	// printf ("in show contents, data path is '%s'\n", data->path);
@@ -198,43 +280,11 @@ int	show_contents(t_list **node, char *parent_path, uint32_t flags)
 	// 		(uintmax_t) statbuf.st_uid, (uintmax_t) statbuf.st_gid);
 	// printf("File size:                %jd bytes\n",
 	// 		(intmax_t) statbuf.st_size);
-	// printf("Last status change:       %s", ctime(&statbuf.st_ctime));
-	// printf("Last file access:         %s", ctime(&statbuf.st_atime));
+	
 	// printf("Last file modification:   %s", ctime(&statbuf.st_mtime));
-	struct passwd	*usr_pwd;
-	struct group	*grp_pwd;
-
-	usr_pwd = getpwuid(statbuf.st_uid);
-	printf ("%s\n", usr_pwd->pw_name);
-	grp_pwd = getgrgid(statbuf.st_gid);
-	printf ("%s\n", grp_pwd->gr_name);
 	data->type = statbuf.st_mode & S_IFMT;
 	format_output(&subdirs, &statbuf, *node, flags);
-	if (data->type == S_IFDIR)
-	{
-		ret = check_dir_contents(&subdirs, &statbuf, *node, flags);
-		// tmp = subdirs;
-		// while (tmp)
-		// {
-		// 	printf ("subdirs: `%s`\n", ((arg_t *)tmp->data)->path);
-		// 	tmp = tmp->next;
-		// }
-	}
-	else
-	{
 
-	}
-	while (subdirs != NULL)
-	{
-		show_contents(&subdirs, parent_path, flags);
-		tmp = subdirs->next;
-		// free all mallocs inside
-		free(((arg_t *)subdirs->data)->path);
-		free(subdirs->data);
-		free(subdirs);
-		subdirs = tmp;
-	}
-	//exit(1);
 	return (ret);
 }
 
@@ -270,7 +320,7 @@ int	main(int argc, char **argv)
 		free(tmp->data);
 		free(tmp);
 	}
-	//tmp
+
 	free(ls);
 	return (0);
 }

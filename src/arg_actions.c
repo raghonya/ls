@@ -1,6 +1,6 @@
 #include "ls.h"
 
-arg_t*	create_arg(char *path)
+arg_t*	create_arg(char *path, char *name)
 {
 	arg_t	*data;
 
@@ -14,6 +14,7 @@ arg_t*	create_arg(char *path)
 	data->num_of_links = 0;
 	data->owner = "";
 	data->path = path;
+	data->name = name;
 	data->perm = 0;
 	data->size = 0;
 	data->time_last_modif = "";
@@ -24,7 +25,7 @@ arg_t*	create_arg(char *path)
 
 int	add_arg(cmd_t *ls, char *path)
 {
-	ft_lstadd_back(&ls->arg, ft_lstnew(create_arg(path)));
+	ft_lstadd_back(&ls->arg, ft_lstnew(create_arg(path, path)));
 	return (0);
 }
 
