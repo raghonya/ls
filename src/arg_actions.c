@@ -1,5 +1,12 @@
 #include "ls.h"
 
+void	free_arg(void *arg)
+{
+	free(((arg_t *)arg)->name);
+	free(((arg_t *)arg)->path);
+	free(arg);
+}
+
 arg_t*	create_arg(char *path, char *name)
 {
 	arg_t	*data;
@@ -13,8 +20,8 @@ arg_t*	create_arg(char *path, char *name)
 	data->group = "";
 	data->num_of_links = 0;
 	data->owner = "";
-	data->path = path;
-	data->name = name;
+	data->path = ft_strdup(path);
+	data->name = ft_strdup(name);
 	data->perm = 0;
 	data->size = 0;
 	data->time_last_modif = "";

@@ -92,6 +92,7 @@ void	err_exit(int ret_code, char *message);
 // arg_t*	create_arg(char *path);
 arg_t*	create_arg(char *path, char *name);
 int		add_arg(cmd_t *ls, char *path);
+void	free_arg(void *arg);
 int		arg_parse(cmd_t *ls, int argc, char **argv);
 
 arg_t	*node_new(char *path);

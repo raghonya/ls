@@ -1,7 +1,7 @@
 NAME	=	ft_ls
 CC		=	gcc
 CFLAGS	=	-g# -Wall -Wextra #-Werror
-# CFLAGS	+=	-fsanitize=address
+CFLAGS	+=	-fsanitize=address
 SRC_DIR	=	src
 SRCS	=	$(wildcard $(SRC_DIR)/*.c)
 OBJDIR	=	obj
