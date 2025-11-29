@@ -28,9 +28,11 @@ $(OBJDIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/ls.h Makefile
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
 clean:
+	@make -C $(LIBFT) clean
 	rm -rf $(OBJDIR)
 
 fclean: clean
+	@make -C $(LIBFT) fclean
 	rm -f $(NAME)
 
 re: fclean all
