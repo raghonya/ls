@@ -64,12 +64,12 @@ typedef enum arg_type_t
 typedef struct arg_t
 {
 	arg_type_t		type;
-	uint16_t		perm;
-	size_t			num_of_links;
+	char			*perm;
+	nlink_t			lnk_cnt;
 	char			*owner;
 	char			*group;
-	size_t			size;
-	char			*time_last_modif;
+	off_t			size;
+	time_t			last_modif;
 	char			*path;
 	char			*name;
 	off_t			blocks;
@@ -88,16 +88,16 @@ typedef struct cmd_t
 
 } cmd_t;
 
-void	err_exit(int ret_code, char *message);
+void	err_exit(int condition, char *message, int code);
 // arg_t*	create_arg(char *path);
 arg_t*	create_arg(char *path, char *name);
 int		add_arg(cmd_t *ls, char *path);
 void	free_arg(void *arg);
 int		arg_parse(cmd_t *ls, int argc, char **argv);
+int		fill_arg_info(arg_t *arg);
 
-arg_t	*node_new(char *path);
-void	node_add_back(arg_t **list, arg_t *new);
+void	slice_last_chars(char **str, char c);
+char	*create_relative_path(char *path, char *name);
+t_list	*reverse_list(t_list *head);
 
 #endif
-
-void grno(DIR *dir);

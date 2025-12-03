@@ -1,6 +1,7 @@
 *.c
 *.cpp
 *.o
+ban
 
 # Prerequisites
 *.d

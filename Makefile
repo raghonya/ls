@@ -18,8 +18,8 @@ $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
 run_libft:
-	@make -C $(LIBFT) all
-	@make -C $(LIBFT) bonus
+	@make -C $(LIBFT) all bonus
+# 	@make -C $(LIBFT) bonus
 
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME) $(LINKS)
