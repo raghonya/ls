@@ -31,12 +31,26 @@
 
 //# define LS_ERR_MESSAGE_NO_SUCH_FILE_OR_DIRECTORY "ls: cannot access '': No such file or directory"
 
-typedef enum error_codes_t
+typedef enum ret_code
 {
-	LS_ERR_INVALID_OPTION = 1,
+	LS_ERR_RETURN_CODE_NO_ERROR = 0,
+	LS_ERR_RETURN_CODE_MINOR,
+	LS_ERR_RETURN_CODE_FATAL
+} ret_code;
+
+typedef enum err_type
+{
+	LS_ERR_INVALID_OPTION = 0,
 	LS_ERR_NO_SUCH_FILE_OR_DIRECTORY,
 	LS_ERR_PERMISSION_DENIED,
-} error_codes_t;
+} err_type;
+
+typedef struct s_error
+{
+	char		*message;
+	ret_code	code;
+	err_type	type;
+} t_error;
 
 //typedef enum flag_bin_val_t
 //{
@@ -73,17 +87,18 @@ typedef struct arg_t
 	char			*path;
 	char			*name;
 	off_t			blocks;
+	// err_type		err;
 } arg_t;
 
 typedef struct cmd_t
 {
-	int			return_code;
-	uint32_t	flags;
-	//int32_t	flags;
-	//char		**args;
-	t_list		*arg;
-	t_list		*dir_queue;
-	char		*parent_path;
+	uint32_t		flags;
+	//int32_t		flags;
+	//char			**args;
+	t_list			*args;
+	t_list			*dir_queue;
+	char			*parent_path;
+	t_error			err;
 	//arg_t		*resources;
 
 } cmd_t;
@@ -95,7 +110,10 @@ int		add_arg(cmd_t *ls, char *path);
 void	free_arg(void *arg);
 int		arg_parse(cmd_t *ls, int argc, char **argv);
 int		fill_arg_info(arg_t *arg);
+void	delete_arg(t_list **lst, t_list *node);
+void	sort_list(t_list **lst);
 
+char	*str_to_lower(char *str);
 void	slice_last_chars(char **str, char c);
 char	*create_relative_path(char *path, char *name);
 t_list	*reverse_list(t_list *head);

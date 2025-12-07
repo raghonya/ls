@@ -1,5 +1,5 @@
 #include "ls.h"
-
+#include <errno.h>
 /*
 ◦ write
 ◦ opendir
@@ -34,22 +34,41 @@
 // 	}
 // }
 // int	show_contents(t_list **node, char *parent_path, uint32_t flags);
+
+void	print(t_list *lst)
+{
+	while (lst)
+	{
+		arg_t *data = lst->data;
+		printf("%s\n", data->name);
+		lst = lst->next;
+	}
+}
+
 int	show_contents(t_list *node, char *parent_path, uint32_t flags);
 
-void return_code_check(int err_code, int exit_code)
+void err_type_check(t_error err)
 {
-	char	*err_message = "";
+	// char	*err_message = "";
 
-	switch(err_code)
+	switch (err.type)
 	{
 		case LS_ERR_INVALID_OPTION:
-			//err_message = LS_ERR_MESSAGE_INVALID_OPTION; //pti poxvi code y flagi het
-			//printf ("ooooo\n");
+			ft_putendl_fd(err.message, 1);
+			exit(2);
+			// err_message = LS_ERR_MESSAGE_INVALID_OPTION; //pti poxvi code y flagi het
+			// printf ("ooooo\n");
+			// write (1, "ls: invalid")
 			break;
+		case LS_ERR_NO_SUCH_FILE_OR_DIRECTORY:
+			write (1, "", 1);
+		case LS_ERR_PERMISSION_DENIED:
+			write (1, "", 1);
 	}
-	err_message = "yo";
-	ft_putendl_fd(err_message, STDERR_FILENO);
-	exit(exit_code); // nned to be changed
+
+	// err_message = "yo";
+	// ft_putendl_fd(err_message, STDERR_FILENO);
+	// exit(exit_code); // nned to be changed
 }
 
 int		read_link(char *link, struct stat *statbuf)
@@ -106,80 +125,7 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 		return (0);
 	if (LS_OPTION_l & flags)
 	{
-		// if (lstat(arg->path, &statbuf) != 0)
-		// {
-		// 	write (2, "Error stat\n", 11);
-		// 	write(1, arg->path, ft_strlen(arg->path));
-		// 	return (2);
-		// }
-		// switch (statbuf.st_mode & S_IFMT)
-		// {
-		// 	case FILETYPE:	break;
-		// 	case BLK_DEV:	permissions[0] = 'b'; break;
-		// 	case CHAR_DEV:	permissions[0] = 'c'; break;
-		// 	case DIRECTORY:	permissions[0] = 'd'; break;
-		// 	case FIFO:		permissions[0] = 'p'; break;
-		// 	case LINK:		permissions[0] = 'l'; break;
-		// 	case SOCK:		permissions[0] = 's'; break;
-		// 	default:		permissions[0] = '?'; break;
-		// }
-		// char * tmp = ctime(&statbuf.st_mtime);
-		// struct passwd	*usr_pwd;
-		// struct group	*grp_pwd;
 
-		// usr_pwd = getpwuid(statbuf.st_uid);
-		// grp_pwd = getgrgid(statbuf.st_gid);
-
-		// write(1, permissions, ft_strlen(permissions));
-		// write(1, " ", 1);
-
-		// char *tmp2;
-		// tmp2 = ft_itoa((uintmax_t)statbuf.st_nlink);
-		// write(1, tmp2, ft_strlen(tmp2));
-		// write(1, " ", 1);
-		// free(tmp2);
-
-		// write(1, usr_pwd->pw_name, ft_strlen(usr_pwd->pw_name));
-		// write(1, " ", 1);
-
-		// write(1, grp_pwd->gr_name, ft_strlen(grp_pwd->gr_name));
-		// write(1, " ", 1);
-
-		// tmp2 = ft_itoa((intmax_t) statbuf.st_size);
-		// write(1, tmp2, ft_strlen(tmp2));
-		// write(1, " ", 1);
-		// free(tmp2);
-
-		// // tmp2 = ctime(&statbuf.st_mtime);
-		// // write(1, tmp2, ft_strlen(tmp2) - 1);
-		// printf ("%d\n", (intmax_t)statbuf.st_mtime);
-		// write(1, " ", 1);
-
-		// write(1, arg->name, ft_strlen(arg->name));
-		// write(1, "\n", 1);
-		// if ((statbuf.st_mode & S_IFMT) == LINK)
-		// {
-		// 	read_link(arg->path, &statbuf);
-		// }
-		// printf("%x", statbuf.st_mode); +++++++
-		// printf(" %ju", (uintmax_t)statbuf.st_nlink); +++++++
-		// printf (" %s", usr_pwd->pw_name); +++++++
-		// printf (" %s", grp_pwd->gr_name); +++++++
-		// printf(" %jd", (intmax_t) statbuf.st_size); +++++++
-		// printf(" %s ", ctime(&statbuf.st_mtime)); 
-		
-		// printf("Mode: %x\n", statbuf.st_mode);
-		// printf("Link count:               %ju\n", (uintmax_t) statbuf.st_nlink);
-		// printf ("%s\n", usr_pwd->pw_arg->path);
-		// printf ("%s\n", grp_pwd->gr_arg->path);
-		// printf("Last file modification:   %s", ctime(&statbuf.st_mtime));
-		// printf("Ownership:                UID=%ju   GID=%ju\n",
-		// 		(uintmax_t) statbuf.st_uid, (uintmax_t) statbuf.st_gid);
-		// printf("File size:                %jd bytes\n",
-		// 		(intmax_t) statbuf.st_size);
-
-
-		// call function for -l flag output
 	}
 	else
 	{
@@ -195,15 +141,11 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 
 int	print_ordered(t_list *order, uint32_t flags)
 {
-	t_list	*tmp;
-	
-	tmp = order;
-	while (tmp)
+	while (order)
 	{
-		print_name(tmp->data, tmp->next == NULL, flags);
-		tmp = tmp->next;
+		print_name(order->data, order->next == NULL, flags);
+		order = order->next;
 	}
-	ft_lstclear(&order, &free_arg);
 	// write(1, "\n", 1);
 }
 
@@ -228,13 +170,14 @@ int	check_dir_contents(t_list **subdirs, char *path, uint32_t flags)
 	struct dirent	*elem;
 	t_list			*order;
 	char			*new_path;
-	// char			*path = ((arg_t *)parent_node->data)->path;
 
 	order = NULL;
 	new_path = NULL;
 	dir = opendir(path);
-	if (!dir) return (2);
-	// err_exit(!dir, "Dir error", 2);
+	if (!dir){
+		puts("opendir");
+		return (2);
+	}
 	elem = readdir(dir);
 	if (flags & LS_OPTION_R)
 	{
@@ -268,16 +211,21 @@ int	check_dir_contents(t_list **subdirs, char *path, uint32_t flags)
 		//sort list with time sorting
 		;
 	}
-	// else
-	//	sort list like normal
+	else
+	{
+		printf("just order\n");
+		sort_list(&order);
+	}
 
 	if (flags & LS_OPTION_r)
 		order = reverse_list(order);
-	if (LS_OPTION_R & flags)
+	if (flags & LS_OPTION_R)
 		check_recursion(order, subdirs);
 	closedir(dir);
 	print_ordered(order, flags);
-	write (1, "\n", 1);
+	ft_lstclear(&order, &free_arg);
+
+	// write (1, "\n", 1);
 	return (0);
 }
 
@@ -287,16 +235,10 @@ int	open_dir(char *path, uint32_t flags)
 	t_list	*tmp;
 	t_list	*subdirs;
 
+	subdirs = NULL;
 	ret = check_dir_contents(&subdirs, path, flags);
-	if (ret) return (ret);
-
-	// tmp = subdirs;
-	// while (tmp)
-	// {
-	// 	printf ("subdir %s\n", ((arg_t *)tmp->data)->path);
-	// 	tmp = tmp->next;
-	// }
-
+	if (ret)
+		return (ret);
 	tmp = subdirs;
 	while (tmp != NULL)
 	{
@@ -312,16 +254,13 @@ int	format_output(t_list *parent_node, uint32_t flags)
 {
 	int			ret;
 	arg_t		*data = ((arg_t *)parent_node->data);
-	t_list		*subdirs;
-	t_list		*tmp;
 
 	ret = 0;
-	subdirs = NULL;
-	// printf ("node path: '%s'\n", data->path);
-	if (data->type == S_IFDIR)
+	if (data->type == __S_IFDIR)
 		ret = open_dir(data->path, flags);
 	else
-		print_name(data, 0, flags);
+		ret = print_name(data, 0, flags);
+	return (ret);
 }
 
 int	show_contents(t_list *node, char *parent_path, uint32_t flags)
@@ -353,15 +292,34 @@ int	show_contents(t_list *node, char *parent_path, uint32_t flags)
 	// printf ("%u\n", statbuf.st_atimensec);
 
 	// printf("Last file modification:   %s", ctime(&statbuf.st_mtime));
-	data->type = statbuf.st_mode & S_IFMT;
+	data->type = statbuf.st_mode & __S_IFMT;
 	format_output(node, flags);
 
 	return (ret);
 }
 
-int	check_arg_access(arg_t *arg)
+int	check_arg_access(char *path, t_error *err)
 {
-	
+	int			ret;
+	struct stat	sb;
+	DIR			*dir;
+
+	ret = lstat(path, &sb);
+	if (ret != 0)
+	{
+		// write (2, "Error stat: ", 12);
+		// write(2, path, ft_strlen(path));
+		// write (2, "\n", 1);
+		return (2);
+	}
+	if ((sb.st_mode & __S_IFMT) == __S_IFDIR)
+	{
+		dir = opendir(path);
+		if (dir == NULL)
+			return (2);
+		closedir(dir);
+	}
+	return (0);
 }
 
 int	main(int argc, char **argv)
@@ -375,14 +333,36 @@ int	main(int argc, char **argv)
 	if (argc < 1)
 		return (1);
 	ls->flags = 0;
-	ls->arg = NULL;
+	ls->args = NULL;
 	ret = arg_parse(ls, argc, argv);
-	if (ret) return_code_check(ls->return_code, ret);
-	if (ls->arg == NULL)
+	if (ret) err_type_check(ls->err);
+	if (ls->args == NULL)
 		add_arg(ls, ".");
 	printf ("%d\n", ls->flags);
 
-	tmp_lst = ls->arg;
+	// amen folderi vra kancel opendir, heto yst dra stugel permissionnery u
+	// ancnelov sax argumentneri vrov, het gal show_contents kamchel normalneri vra
+	tmp_lst = ls->args;
+	while (tmp_lst)
+	{
+		ret = check_arg_access(((arg_t *)tmp_lst->data)->path, &ls->err);
+		if (ret)
+		{
+			t_list *tmp2 = tmp_lst;
+			printf ("Error on %s\n", ((arg_t *)tmp_lst->data)->path);
+			tmp_lst = tmp_lst->next;
+			delete_arg(&ls->args, tmp2);
+			err_type_check(ls->err);
+			continue ;
+		}
+		tmp_lst = tmp_lst->next;
+		// ls->parent_path = ((arg_t *)tmp_lst->data)->path;
+	}
+	sort_list(&ls->args);
+	// printf ("what\n");
+	// print(ls->args);
+	// printf ("what\n");
+	tmp_lst = ls->args;
 	while (tmp_lst)
 	{
 		ls->parent_path = ((arg_t *)tmp_lst->data)->path;
@@ -390,10 +370,10 @@ int	main(int argc, char **argv)
 		tmp_lst = tmp_lst->next;
 	}
 	// if (ret)
-		// err_exit(ret, "error");
+	// 	err_exit(ret, "error");
 		
-	ft_lstclear(&ls->arg, &free_arg);
-
+	ft_lstclear(&ls->args, &free_arg);
 	free(ls);
+	write (1, "\n", 1);
 	return (0);
 }

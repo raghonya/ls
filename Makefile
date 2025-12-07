@@ -1,7 +1,9 @@
 NAME	=	ft_ls
 CC		=	gcc
-CFLAGS	=	-g# -Wall -Wextra #-Werror
-CFLAGS	+=	-fsanitize=address
+CFLAGS	=	
+# CFLAGS	+=	-fsanitize=address
+# CFLAGS	+=	-fsanitize=undefined
+CFLAGS	+=	-g# -Wall -Wextra #-Werror
 SRC_DIR	=	src
 SRCS	=	$(wildcard $(SRC_DIR)/*.c)
 OBJDIR	=	obj
@@ -19,7 +21,6 @@ $(OBJDIR):
 
 run_libft:
 	@make -C $(LIBFT) all bonus
-# 	@make -C $(LIBFT) bonus
 
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME) $(LINKS)

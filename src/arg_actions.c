@@ -4,7 +4,7 @@ void	free_arg(void *arg)
 {
 	free(((arg_t *)arg)->name);
 	free(((arg_t *)arg)->path);
-	free(((arg_t *)arg)->perm);
+	// free(((arg_t *)arg)->perm);
 	free(arg);
 }
 
@@ -33,6 +33,7 @@ arg_t*	create_arg(char *path, char *name)
 		write(2, "Malloc error\n", 13);
 		exit(2);
 	}
+	data->perm = NULL;
 	data->size = 0;
 	data->last_modif = 0;
 	data->type = FILETYPE;
@@ -48,16 +49,18 @@ int	add_arg(cmd_t *ls, char *path)
 	if (!new_node)
 	{
 		write(2, "Malloc error\n", 13);
-		exit(2);
+		return (LS_ERR_RETURN_CODE_FATAL);
 	}
-	ft_lstadd_back(&ls->arg, new_node);
-	return (0);
+	ft_lstadd_back(&ls->args, new_node);
+	return (LS_ERR_RETURN_CODE_NO_ERROR);
 }
 
 int	arg_parse(cmd_t *ls, int argc, char **argv)
 {
+	int		ret;
 	int		flag_len = 0;
 
+	ret = 0;
 	for (int i = 1; i < argc; ++i)
 	{
 		if (argv[i][0] == '-' && argv[i][1] != '-')
@@ -85,122 +88,116 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 						ls->flags |= LS_OPTION_t;
 						break ;
 					default:
-						ls->return_code = LS_ERR_INVALID_OPTION;
-						return (2);
+						ls->err.code = LS_ERR_INVALID_OPTION;
+						return (LS_ERR_RETURN_CODE_FATAL);
 				}
 			}
 		}
 		else
-			add_arg(ls, argv[i]);
+		{
+			if (add_arg(ls, argv[i]))
+				return (LS_ERR_RETURN_CODE_FATAL);
+		}
 	}
 	return (0);
 }
 
-char *calculate_permissions(mode_t mode)
+void	swap_args(arg_t **first, arg_t **second)
 {
-	uint16_t	obj_perms;
-	char		*mode_str;
+	arg_t *tmp;
 
-	mode_str = ft_strdup("rwxrwxrwx");
-	if (!mode_str)
-		return (NULL);
-	obj_perms = mode & 0777;
-	for (int i = 0; i < 10; ++i)
+	tmp = *first;
+	*first = *second;
+	*second = tmp;
+}
+
+// void sort_list(t_list **lst)
+// {
+//     t_list *first = (*lst); 
+//     t_list *last = NULL;
+
+//     while ( first && first->next != last )
+//     {
+//         t_list *sorted = first->next;
+//         for ( t_list *current = first; current->next != last; current = current->next )
+//         {
+// 			arg_t	*cur_data = current->data;
+// 			arg_t	*next_data = current->next->data;
+// 			if (ft_strcmp(cur_data->name, next_data->name) > 0)
+// 			{
+// 				swap_args(&cur_data, &next_data);
+// 				sorted = current->next;
+// 			}
+//         }
+//         last = sorted;
+//     }
+//     (*lst) = first;
+// }
+
+char	*remove_symbols(char *str)
+{
+	for (int i = 0; str[i]; ++i)
 	{
-		if (!(obj_perms & (1 << i)))
+		if (!ft_isalnum(str[i]))
 		{
-			mode_str[9 - i] = '-';
-			// switch (i % 3)
-			// {
-			// 	case 0:
-			// 		mode_str[9 - i] = 'x';
-			// 		break;
-			// 	case 1:
-			// 		mode_str[9 - i] = 'w';
-			// 		break;
-			// 	case 2:
-			// 		mode_str[9 - i] = 'r';
-			// 		break;
-			// }
+			for (int j = i; str[j]; ++j)
+				str[j] = str[j + 1];
+			i--;
 		}
 	}
-	return (mode_str);
+	return (str);
 }
 
-char	*check_permissions(mode_t mode)
+void sort_list(t_list **lst)
 {
-	char	*permissions;
-	char	*tmp;
-	
-	permissions = ft_strdup("-rwxrwxrwx");
-	if (!permissions)
-		return (NULL);
-	switch (mode & S_IFMT)
+	char	*tmpc1;
+	char	*tmpc2;
+	t_list	*node;
+	t_list	*temp;
+	t_list	*temp2;
+	arg_t	*temp_swap;
+
+	temp = NULL;
+	node = *lst;
+	while (node != NULL)
 	{
-		case FILETYPE:	permissions[0] = '-';
-		case BLK_DEV:	permissions[0] = 'b';
-		case CHAR_DEV:	permissions[0] = 'c';
-		case DIRECTORY:	permissions[0] = 'd';
-		case FIFO:		permissions[0] = 'p';
-		case LINK:		permissions[0] = 'l';
-		case SOCK:		permissions[0] = 's';
-		default:		permissions[0] = '?';
+		temp = node;
+		temp2 = temp->next;
+		while (temp2 != NULL)
+		{
+			tmpc1 = str_to_lower(((arg_t *)temp->data)->name);
+			tmpc1 = remove_symbols(tmpc1);
+			tmpc2 = str_to_lower(((arg_t *)temp2->data)->name);
+			tmpc2 = remove_symbols(tmpc2);
+			if (ft_strcmp(tmpc1, tmpc2) > 0)
+			{
+				temp_swap = temp->data;
+				temp->data = temp2->data;
+				temp2->data = temp_swap;
+			}
+			free(tmpc1);
+			free(tmpc2);
+			temp2 = temp2->next;
+		}
+		node = node->next;
 	}
-	tmp = calculate_permissions(mode);
-	if (!tmp)
-		return (NULL);
-	ft_memcpy(permissions + 1, tmp, ft_strlen(tmp));
-	free(tmp);
-	return (permissions);
 }
 
-int	fill_arg_info(arg_t *arg)
+void	delete_arg(t_list **lst, t_list *node)
 {
-	int				ret;
-	char			*tmp;
-	struct stat		statbuf;
-	struct passwd	*usr_pwd;
-	struct group	*grp_pwd;
-	char			permissions[11] = "----------";
+	t_list	*tmp;
+	t_list	*prev;
 
-	if (lstat(arg->path, &statbuf) != 0)
+	tmp = *lst;
+	while (tmp)
 	{
-		write (2, "Error stat\n", 11);
-		write(1, arg->path, ft_strlen(arg->path));
-		return (2);
+		if (tmp->next == node)
+		{
+			prev = tmp;
+			prev->next = node->next;
+			ft_lstdelone(node, &free_arg);
+			return ;
+		}
+		tmp = tmp->next;
 	}
-
-	// permissions
-	arg->perm = check_permissions(statbuf.st_mode);
-
-	// user and group
-	usr_pwd = getpwuid(statbuf.st_uid);
-	if (!usr_pwd) return (2);
-	grp_pwd = getgrgid(statbuf.st_gid);
-	if (!grp_pwd) return (2);
-	arg->owner = usr_pwd->pw_name;
-	arg->group = grp_pwd->gr_name;
-	
-	// link count
-	arg->lnk_cnt = statbuf.st_nlink;
-
-	// size
-	arg->size = statbuf.st_size;
-
-	// time
-	arg->last_modif = statbuf.st_mtime;
-	
-	// tmp2 = ft_itoa((intmax_t) statbuf.st_size);
-	// write(1, tmp2, ft_strlen(tmp2));
-	// write(1, " ", 1);
-	// free(tmp2);
-
-	// tmp2 = ctime(&statbuf.st_mtime);
-	// write(1, tmp2, ft_strlen(tmp2) - 1);
-	// printf ("%d\n", (intmax_t)statbuf.st_mtime);
-	// write(1, " ", 1);
-
-	// write(1, arg->name, ft_strlen(arg->name));
-	// write(1, "\n", 1);
-
 }

@@ -23,6 +23,29 @@ void	err_exit(int condition, char *message, int code)
 	}
 }
 
+char *str_to_lower(char *str)
+{
+	size_t	len;
+	char	*low_str;
+
+	len = ft_strlen(str);
+	low_str = malloc(sizeof(char) * (len + 1));
+	if (!low_str)
+		return (NULL);
+	for (int i = 0; i < len; ++i)
+		low_str[i] = ft_tolower(str[i]);
+	return (low_str);
+}
+
+// void	swap_args(void **first, void **second)
+// {
+// 	void *tmp;
+
+// 	tmp = *first;
+// 	*first = *second;
+// 	*second = tmp;
+// }
+
 void	slice_last_chars(char **str, char c)
 {
 	int	len;
@@ -68,57 +91,3 @@ t_list	*reverse_list(t_list *head)
 
 	return (prev);
 }
-
-// void	err_exit(int ret_code, char *message)
-// {
-	
-// }
-
-// off_t math_ceil(off_t divisible)
-// {
-// 	off_t	divider;
-
-// 	divider = 4096;
-	
-// }
-
-void	handle_l()
-{
-	
-}
-
-//void node_add_back(arg_t **list, arg_t *new)
-//{
-//	arg_t	*a;
-
-//	if (!*list && new)
-//	{
-//		*list = new;
-//		return ;
-//	}
-//	else if (!new)
-//		return ;
-//	a = *list;
-//	while ((*list)->next)
-//		*list = (*list)->next;
-//	(*list)->next = new;
-//	*list = a;
-//}
-
-//arg_t	*node_new(char *path)
-//{
-//	arg_t	*new;
-
-//	new = malloc(sizeof(arg_t));
-//	if (!new)
-//		return (NULL);
-//	new->type = FILETYPE;
-//	new->num_of_links = 0;
-//	new->owner = "";
-//	new->group = "";
-//	new->size = 0;
-//	new->time_last_modif = "";
-//	new->path = path;
-//	new->next = NULL;
-//	return (new);
-//}
