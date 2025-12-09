@@ -27,26 +27,26 @@ char	*check_permissions(mode_t mode)
 		return (NULL);
 	switch (mode & __S_IFMT)
 	{
-		case FILETYPE:	permissions[0] = '-';
-		case BLK_DEV:	permissions[0] = 'b';
-		case CHAR_DEV:	permissions[0] = 'c';
-		case DIRECTORY:	permissions[0] = 'd';
-		case FIFO:		permissions[0] = 'p';
-		case LINK:		permissions[0] = 'l';
-		case SOCK:		permissions[0] = 's';
-		default:		permissions[0] = '?';
+		case FILETYPE:	permissions[0] = '-'; break ;
+		case BLK_DEV:	permissions[0] = 'b'; break ;
+		case CHAR_DEV:	permissions[0] = 'c'; break ;
+		case DIRECTORY:	permissions[0] = 'd'; break ;
+		case FIFO:		permissions[0] = 'p'; break ;
+		case LINK:		permissions[0] = 'l'; break ;
+		case SOCK:		permissions[0] = 's'; break ;
+		default:		permissions[0] = '?'; break ;
 	}
 	tmp = calculate_permissions(mode);
 	if (!tmp)
 		return (NULL);
 	ft_memcpy(permissions + 1, tmp, ft_strlen(tmp));
 	free(tmp);
+
 	return (permissions);
 }
 
 int	fill_arg_info(arg_t *arg)
 {
-	int				ret;
 	char			*tmp;
 	struct stat		statbuf;
 	struct passwd	*usr_pwd;
@@ -78,18 +78,7 @@ int	fill_arg_info(arg_t *arg)
 
 	// time
 	arg->last_modif = statbuf.st_mtime;
-	
-	// tmp2 = ft_itoa((intmax_t) statbuf.st_size);
-	// write(1, tmp2, ft_strlen(tmp2));
-	// write(1, " ", 1);
-	// free(tmp2);
 
-	// tmp2 = ctime(&statbuf.st_mtime);
-	// write(1, tmp2, ft_strlen(tmp2) - 1);
-	// printf ("%d\n", (intmax_t)statbuf.st_mtime);
-	// write(1, " ", 1);
-
-	// write(1, arg->name, ft_strlen(arg->name));
-	// write(1, "\n", 1);
+	return (LS_ERR_RETURN_CODE_NO_ERROR);
 
 }

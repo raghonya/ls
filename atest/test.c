@@ -168,50 +168,67 @@ void	swap_args(void **first, void **second)
 
 char	*remove_symbols(char *str)
 {
-	for (int i = 0; str[i]; ++i)
+	char	*copy;
+
+	copy = ft_strdup(str);
+	if (!copy)
+		return (copy);
+	for (int i = 0; copy[i]; ++i)
 	{
-		if (!ft_isalnum(str[i]))
+		if (!ft_isalnum(copy[i]))
 		{
-			for (int j = i; str[j]; ++j)
-				str[j] = str[j + 1];
+			for (int j = i; copy[j]; ++j)
+				copy[j] = copy[j + 1];
 			i--;
 		}
 	}
-	return (str);
+	return (copy);
+}
+
+int	compare_names(t_list *first, t_list *second)
+{
+	char *tmp;
+	char *tmpc1;
+	char *tmpc2;
+	char *tmpc1_removed;
+	char *tmpc2_removed;
+
+	tmpc1 = str_to_lower(first->data);
+	tmpc2 = str_to_lower(second->data);
+	tmpc1_removed = remove_symbols(tmpc1);
+	tmpc2_removed = remove_symbols(tmpc2);
+	if (ft_strcmp(tmpc1_removed, tmpc2_removed) == 0)
+	{
+		if(ft_strcmp(tmpc1, tmpc2) > 0)
+			swap_args(&first->data, &second->data);
+	}
+	else
+	{
+		// printf ("hamematvum en '%s' eb '%s'\n", tmpc1_removed, tmpc2_removed);
+		if(ft_strcmp(tmpc1_removed, tmpc2_removed) > 0)
+			swap_args(&first->data, &second->data);
+	}
+	free(tmpc1_removed);
+	free(tmpc2_removed);
+	free(tmpc1);
+	free(tmpc2);
 }
 
 void sort_list(t_list **lst)
 {
-	char	*tmpc1;
-	char	*tmpc2;
 	t_list	*node;
 	t_list	*temp;
 	t_list	*temp2;
-	char	*temp_swap;
 
 	temp = NULL;
 	node = *lst;
 	while (node != NULL)
 	{
 		temp = node;
-		
 		temp2 = temp->next;
 		while (temp2 != NULL)
 		{
-			tmpc1 = str_to_lower(temp->data);
-			tmpc1 = remove_symbols(tmpc1);
-			tmpc2 = str_to_lower(temp2->data);
-			// printf ("before tmpc1: %s, tmpc2: %s\n", tmpc1, tmpc2);
-			tmpc2 = remove_symbols(tmpc2);
-			// printf ("after tmpc1: %s, tmpc2: %s\n", tmpc1, tmpc2);
-			if(ft_strcmp(tmpc1, tmpc2) > 0)
-			{
-				temp_swap = temp->data;
-				temp->data = temp2->data;
-				temp2->data = temp_swap;
-			}
-			free(tmpc1);
-			free(tmpc2);
+			compare_names(temp, temp2);
 			temp2 = temp2->next;
 		}
 		node = node->next;
@@ -220,24 +237,17 @@ void sort_list(t_list **lst)
 
 void	read_dir_file_names(t_list **lst)
 {
-	struct dirent *de;  // Pointer for directory entry
-
-    // opendir() returns a pointer of DIR type. 
+	struct dirent *de;
     DIR *dr = opendir("../symbols_test");
-
-    if (dr == NULL)  // opendir returns NULL if couldn't open directory
+    if (dr == NULL)
     {
         printf("Could not open current directory" );
     }
-
-    // Refer https://pubs.opengroup.org/onlinepubs/7990989775/xsh/readdir.html
-    // for readdir()
     while ((de = readdir(dr)) != NULL)
 	{
 		if (de->d_name[0] != '.')
 			ft_lstadd_back(lst, ft_lstnew(ft_strdup(de->d_name)));
 	}
-
     closedir(dr);    
 }
 
@@ -249,12 +259,6 @@ int main()
 	// ft_memcpy(esim, "_8/516as.tf", ft_strlen("_..8/516as.tf."));
 	// printf ("%s\n", remove_symbols(esim));
 
-	// ban = ft_lstnew("banman");
-	// ban->next = ft_lstnew("maveliban");
-	// ban->next->next = ft_lstnew("1shataveliban");
-	// ban->next->next->next = ft_lstnew("Matshataveliban");
-	// ban->next->next->next->next = ft_lstnew("5 uje");
-	// ban->next->next->next->next->next = ft_lstnew("anixuya 6 uje");
 	// printf ("%p\n", ban->next->next);
 	// checkref(&ban, ban->next->next);
 	//    !world #hello  &hello   hello Make make test.txt
@@ -277,11 +281,11 @@ int main()
 	// printf ("i sfte\n\n");
 	// print(ban);
 	// printf ("\ni sfte avart\n");
-	justforfun(&ban);
+	read_dir_file_names(&ban);
 	sort_list(&ban);
-	printf ("aaa\n\n");
+	// printf ("aaa\n\n");
 	print(ban);
-	printf ("aaa\n");
+	// printf ("aaa\n");
 	// char perms[11] = "1234567890";
 	// char bla[11];
 

@@ -25,26 +25,26 @@ void	err_exit(int condition, char *message, int code)
 
 char *str_to_lower(char *str)
 {
-	size_t	len;
+	int 	i;
 	char	*low_str;
 
-	len = ft_strlen(str);
-	low_str = malloc(sizeof(char) * (len + 1));
+	low_str = malloc(sizeof(char) * (ft_strlen(str) + 1));
 	if (!low_str)
 		return (NULL);
-	for (int i = 0; i < len; ++i)
+	for (i = 0; str[i]; ++i)
 		low_str[i] = ft_tolower(str[i]);
+	low_str[i] = 0;
 	return (low_str);
 }
 
-// void	swap_args(void **first, void **second)
-// {
-// 	void *tmp;
+void	swap_ptrs(void **first, void **second)
+{
+	void	*tmp;
 
-// 	tmp = *first;
-// 	*first = *second;
-// 	*second = tmp;
-// }
+	tmp = *first;
+	*first = *second;
+	*second = tmp;
+}
 
 void	slice_last_chars(char **str, char c)
 {

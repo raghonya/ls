@@ -4,7 +4,7 @@ void	free_arg(void *arg)
 {
 	free(((arg_t *)arg)->name);
 	free(((arg_t *)arg)->path);
-	// free(((arg_t *)arg)->perm);
+	free(((arg_t *)arg)->perm);
 	free(arg);
 }
 
@@ -100,87 +100,6 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 		}
 	}
 	return (0);
-}
-
-void	swap_args(arg_t **first, arg_t **second)
-{
-	arg_t *tmp;
-
-	tmp = *first;
-	*first = *second;
-	*second = tmp;
-}
-
-// void sort_list(t_list **lst)
-// {
-//     t_list *first = (*lst); 
-//     t_list *last = NULL;
-
-//     while ( first && first->next != last )
-//     {
-//         t_list *sorted = first->next;
-//         for ( t_list *current = first; current->next != last; current = current->next )
-//         {
-// 			arg_t	*cur_data = current->data;
-// 			arg_t	*next_data = current->next->data;
-// 			if (ft_strcmp(cur_data->name, next_data->name) > 0)
-// 			{
-// 				swap_args(&cur_data, &next_data);
-// 				sorted = current->next;
-// 			}
-//         }
-//         last = sorted;
-//     }
-//     (*lst) = first;
-// }
-
-char	*remove_symbols(char *str)
-{
-	for (int i = 0; str[i]; ++i)
-	{
-		if (!ft_isalnum(str[i]))
-		{
-			for (int j = i; str[j]; ++j)
-				str[j] = str[j + 1];
-			i--;
-		}
-	}
-	return (str);
-}
-
-void sort_list(t_list **lst)
-{
-	char	*tmpc1;
-	char	*tmpc2;
-	t_list	*node;
-	t_list	*temp;
-	t_list	*temp2;
-	arg_t	*temp_swap;
-
-	temp = NULL;
-	node = *lst;
-	while (node != NULL)
-	{
-		temp = node;
-		temp2 = temp->next;
-		while (temp2 != NULL)
-		{
-			tmpc1 = str_to_lower(((arg_t *)temp->data)->name);
-			tmpc1 = remove_symbols(tmpc1);
-			tmpc2 = str_to_lower(((arg_t *)temp2->data)->name);
-			tmpc2 = remove_symbols(tmpc2);
-			if (ft_strcmp(tmpc1, tmpc2) > 0)
-			{
-				temp_swap = temp->data;
-				temp->data = temp2->data;
-				temp2->data = temp_swap;
-			}
-			free(tmpc1);
-			free(tmpc2);
-			temp2 = temp2->next;
-		}
-		node = node->next;
-	}
 }
 
 void	delete_arg(t_list **lst, t_list *node)

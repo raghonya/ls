@@ -52,27 +52,15 @@ typedef struct s_error
 	err_type	type;
 } t_error;
 
-//typedef enum flag_bin_val_t
-//{
-
-//} flag_bin_val_t;
-
-// typedef struct queue_t
-// {
-// 	struct dirent	*
-
-// } queue_t;
-
-
 typedef enum arg_type_t
 {
-	FILETYPE	= S_IFREG,
-	DIRECTORY	= S_IFDIR,
-	LINK		= S_IFLNK,
-	BLK_DEV		= S_IFBLK,
-	CHAR_DEV	= S_IFCHR,
-	FIFO		= S_IFIFO,
-	SOCK		= S_IFSOCK
+	FILETYPE	= __S_IFREG,
+	DIRECTORY	= __S_IFDIR,
+	LINK		= __S_IFLNK,
+	BLK_DEV		= __S_IFBLK,
+	CHAR_DEV	= __S_IFCHR,
+	FIFO		= __S_IFIFO,
+	SOCK		= __S_IFSOCK
 } arg_type_t;
 
 typedef struct arg_t
@@ -87,32 +75,27 @@ typedef struct arg_t
 	char			*path;
 	char			*name;
 	off_t			blocks;
-	// err_type		err;
 } arg_t;
 
 typedef struct cmd_t
 {
 	uint32_t		flags;
-	//int32_t		flags;
-	//char			**args;
 	t_list			*args;
-	t_list			*dir_queue;
 	char			*parent_path;
 	t_error			err;
-	//arg_t		*resources;
-
 } cmd_t;
 
 void	err_exit(int condition, char *message, int code);
-// arg_t*	create_arg(char *path);
 arg_t*	create_arg(char *path, char *name);
 int		add_arg(cmd_t *ls, char *path);
 void	free_arg(void *arg);
-int		arg_parse(cmd_t *ls, int argc, char **argv);
+int arg_parse(cmd_t *ls, int argc, char **argv);
+void NewFunction(cmd_t *ls);
 int		fill_arg_info(arg_t *arg);
 void	delete_arg(t_list **lst, t_list *node);
 void	sort_list(t_list **lst);
 
+void	swap_ptrs(void **first, void **second);
 char	*str_to_lower(char *str);
 void	slice_last_chars(char **str, char c);
 char	*create_relative_path(char *path, char *name);

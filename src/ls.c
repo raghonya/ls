@@ -21,20 +21,6 @@
 ◦ exit
 */
 
-// void add_elem_to_str(char *s, int len, char to_be_added)
-// {
-// 	int i = 0;
-
-// 	while (i < len && s[i])
-// 		i++;
-// 	if (i < len)
-// 	{
-// 		s[i] = to_be_added;
-// 		s[i + 1] = 0;
-// 	}
-// }
-// int	show_contents(t_list **node, char *parent_path, uint32_t flags);
-
 void	print(t_list *lst)
 {
 	while (lst)
@@ -68,7 +54,7 @@ void err_type_check(t_error err)
 
 	// err_message = "yo";
 	// ft_putendl_fd(err_message, STDERR_FILENO);
-	// exit(exit_code); // nned to be changed
+	// exit(exit_code); // need to be changed
 }
 
 int		read_link(char *link, struct stat *statbuf)
@@ -78,10 +64,6 @@ int		read_link(char *link, struct stat *statbuf)
 	ssize_t	bufsiz, nbytes;
 
 	bufsiz = statbuf->st_size + 1;
-
-	/* Some magic symlinks under (for example) /proc and /sys
-		report 'st_size' as zero. In that case, take PATH_MAX as
-		a "good enough" estimate. */
 
 	if (statbuf->st_size == 0)
 		bufsiz = PATH_MAX;
@@ -98,18 +80,7 @@ int		read_link(char *link, struct stat *statbuf)
 		exit(EXIT_FAILURE);
 	}
 
-	/* Print only 'nbytes' of 'buf', as it doesn't contain a terminating
-		null byte ('\0'). */
 	printf("'%s' points to '%.*s'\n", link, (int) nbytes, buf);
-
-	/* If the return value was equal to the buffer size, then
-		the link target was larger than expected (perhaps because the
-		target was changed between the call to lstat() and the call to
-		readlink()). Warn the user that the returned target may have
-		been truncated. */
-
-	// if (nbytes == bufsiz)
-	// 	printf("(Returned buffer may have been truncated)\n");
 
 	free(buf);
 }
@@ -117,6 +88,7 @@ int		read_link(char *link, struct stat *statbuf)
 int	print_name(arg_t *arg, int is_last, uint32_t flags)
 {
 	int			ret;
+	char		*tmp;
 	struct stat	statbuf;
 	char		permissions[11] = "-rwxrwxrwx";
 
@@ -125,7 +97,38 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 		return (0);
 	if (LS_OPTION_l & flags)
 	{
+		// type and permissions
+		write (1, arg->perm, ft_strlen(arg->perm));
+		write (1, " ", 1);
+		
+		// link count
+		tmp = ft_itoa(arg->lnk_cnt);
+		write (1, tmp, ft_strlen(tmp));
+		write (1, " ", 1);
+		free(tmp);
+		
+		// owner
+		write (1, arg->owner, ft_strlen(arg->owner));
+		write (1, " ", 1);
+		
+		// group
+		write (1, arg->group, ft_strlen(arg->group));
+		write (1, " ", 1);
+		
+		// size
+		tmp = ft_itoa(arg->size);
+		write (1, tmp, ft_strlen(tmp));
+		write (1, " ", 1);
+		free(tmp);
+		
+		// last modified time
+		tmp = ctime(&arg->last_modif);
+		write(1, tmp, ft_strlen(tmp) - 1);
+		write(1, " ", 1);
 
+		// name
+		write (1, arg->name, ft_strlen(arg->name));
+		write (1, "\n", 1);
 	}
 	else
 	{
@@ -146,7 +149,6 @@ int	print_ordered(t_list *order, uint32_t flags)
 		print_name(order->data, order->next == NULL, flags);
 		order = order->next;
 	}
-	// write(1, "\n", 1);
 }
 
 void	check_recursion(t_list *order, t_list **subdirs)
@@ -194,18 +196,15 @@ int	check_dir_contents(t_list **subdirs, char *path, uint32_t flags)
 		}
 		new_path = create_relative_path(path, elem->d_name);
 		err_exit(!new_path, "Malloc error", 2);
-		// printf("elem name: '%s'\n", elem->d_name);
 		t_list *tmp_lst;
 		tmp_lst = ft_lstnew(create_arg(new_path, elem->d_name));
 		err_exit(!tmp_lst, "Malloc error", 2);
 		((arg_t *)tmp_lst->data)->type = elem->d_type;
+		int ret = fill_arg_info(tmp_lst->data);
 		ft_lstadd_back(&order, tmp_lst);
 		free(new_path);
 		elem = readdir(dir);
 	}
-
-	// sort
-	
 	if (flags & LS_OPTION_t)
 	{
 		//sort list with time sorting
@@ -225,7 +224,6 @@ int	check_dir_contents(t_list **subdirs, char *path, uint32_t flags)
 	print_ordered(order, flags);
 	ft_lstclear(&order, &free_arg);
 
-	// write (1, "\n", 1);
 	return (0);
 }
 
@@ -269,29 +267,20 @@ int	show_contents(t_list *node, char *parent_path, uint32_t flags)
 	arg_t		*data = node->data;
 	int			ret;
 
-	// printf ("in show contents, data path is '%s'\n", data->path);
-	// printf ("node path: '%s'\n", data->path);
 	ret = lstat(data->path, &statbuf);
-	// dprintf (2, "data->path: '%s' %d\n", data->path, ret);
 	if (ret != 0)
 	{
 		write (2, "Error stat: ", 12);
 		write(2, data->path, ft_strlen(data->path));
 		write (2, "\n", 1);
-		// exit(2);
 		return (2);
 	}
 
-	// ret = fill_arg_info(data);
-	
-	// printf ("perms: %o\n", statbuf.st_mode & 0777);
-	// calculate_permissions(statbuf.st_mode & 0777);
-	// printf ("blksize: %ld\n", statbuf.st_blocks);
-	// printf ("%ld\n", statbuf.st_size);
-	// printf ("%d\n", statbuf.st_uid);
-	// printf ("%u\n", statbuf.st_atimensec);
+	// what after return ???
+	ret = fill_arg_info(data);
+	if (ret) return (ret);
+	// what after return ???
 
-	// printf("Last file modification:   %s", ctime(&statbuf.st_mtime));
 	data->type = statbuf.st_mode & __S_IFMT;
 	format_output(node, flags);
 
@@ -340,8 +329,6 @@ int	main(int argc, char **argv)
 		add_arg(ls, ".");
 	printf ("%d\n", ls->flags);
 
-	// amen folderi vra kancel opendir, heto yst dra stugel permissionnery u
-	// ancnelov sax argumentneri vrov, het gal show_contents kamchel normalneri vra
 	tmp_lst = ls->args;
 	while (tmp_lst)
 	{
@@ -356,12 +343,8 @@ int	main(int argc, char **argv)
 			continue ;
 		}
 		tmp_lst = tmp_lst->next;
-		// ls->parent_path = ((arg_t *)tmp_lst->data)->path;
 	}
 	sort_list(&ls->args);
-	// printf ("what\n");
-	// print(ls->args);
-	// printf ("what\n");
 	tmp_lst = ls->args;
 	while (tmp_lst)
 	{

@@ -109,28 +109,3 @@ char	**ft_split(char const *s, char c)
 	}
 	return (fill(s, split, wrdcnt, c));
 }
-
-// #include <stdio.h>
-
-// int main()
-// {
-// 	char c = ' ', s[1000] = "asdhua shaji rguhe e $^&* 890HU 7237 E9 79 a";
-// 	char **s1 = ft_split(s, c);
-// 	int i = 0, wrdcnt = 0;
-// 	while (s[i])
-// 	{
-// 		while (s[i] == c)
-// 			i++;
-// 		if (s[i] != 0)
-// 			wrdcnt++;
-// 		while (s[i] != c && s[i] != 0)
-// 			i++;
-// 	}
-// 	printf ("%d\n", wrdcnt);
-// 	i = 0;
-// 	while (i < wrdcnt + 1)
-// 	{
-// 		printf ("%s ,", s1[i]);
-// 		i++;
-// 	}
-// }

@@ -2,6 +2,10 @@
 *.cpp
 *.o
 ban
+symbols_test
+atest
+ban
+obj
 
 # Prerequisites
 *.d
