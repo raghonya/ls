@@ -1,11 +1,11 @@
 # *.c
 *.cpp
 *.o
-ban
-symbols_test
-atest
-ban
-obj
+ban/
+symbols_test/
+atest/
+ban/
+obj/
 
 # Prerequisites
 *.d
