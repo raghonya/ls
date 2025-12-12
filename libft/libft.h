@@ -69,4 +69,7 @@ t_list	*ft_lstmap(t_list *lst, void *(*f)(void *), void (*del)(void *));
 t_list	*ft_lstnew(void *content);
 t_list	*ft_lstlast(t_list *lst);
 
+void	ft_free_2d_array(char **arr);
+int		ft_len_2d_array(char **arr);
+
 #endif

@@ -46,7 +46,18 @@ static int	compare_names(t_list *first, t_list *second)
 	free(tmpc2);
 }
 
-void sort_list(t_list **lst)
+void	compare_times(t_list *first, t_list *second)
+{
+	time_t	first_time;
+	time_t	second_time;
+
+	first_time = ((arg_t *)first->data)->last_modif;
+	second_time = ((arg_t *)second->data)->last_modif;
+	if (first_time < second_time)
+		swap_ptrs(&first->data, &second->data);
+}
+
+void	sort_list(t_list **lst, int sort_by)
 {
 	t_list	*node;
 	t_list	*temp;
@@ -60,7 +71,12 @@ void sort_list(t_list **lst)
 		temp2 = temp->next;
 		while (temp2 != NULL)
 		{
-			compare_names(temp, temp2);
+			if (sort_by == SORT_BY_TIME)
+				compare_times(temp, temp2);
+			else if (sort_by == SORT_BY_NAME)
+				compare_names(temp, temp2);
+			else
+				return ;
 			temp2 = temp2->next;
 		}
 		node = node->next;

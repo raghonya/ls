@@ -14,9 +14,8 @@
 # include <sys/stat.h>
 # include <stdint.h>
 
-#include "libft.h"
-
-//# define LS_ERR_MESSAGE_INVALID_OPTION(opt) "invalid option -- ''"
+# include "libft.h"
+# include "error.h"
 
 # define STATIC_ARR_LENGTH(arr, type) (size_t)(sizeof(arr) / sizeof(type))
 
@@ -29,28 +28,10 @@
 # define LS_OPTION_r	0b01000
 # define LS_OPTION_t	0b10000
 
+# define SORT_BY_NAME	0
+# define SORT_BY_TIME	1
+
 //# define LS_ERR_MESSAGE_NO_SUCH_FILE_OR_DIRECTORY "ls: cannot access '': No such file or directory"
-
-typedef enum ret_code
-{
-	LS_ERR_RETURN_CODE_NO_ERROR = 0,
-	LS_ERR_RETURN_CODE_MINOR,
-	LS_ERR_RETURN_CODE_FATAL
-} ret_code;
-
-typedef enum err_type
-{
-	LS_ERR_INVALID_OPTION = 0,
-	LS_ERR_NO_SUCH_FILE_OR_DIRECTORY,
-	LS_ERR_PERMISSION_DENIED,
-} err_type;
-
-typedef struct s_error
-{
-	char		*message;
-	ret_code	code;
-	err_type	type;
-} t_error;
 
 typedef enum arg_type_t
 {
@@ -75,6 +56,7 @@ typedef struct arg_t
 	char			*path;
 	char			*name;
 	off_t			blocks;
+	int				is_full_datetime;
 } arg_t;
 
 typedef struct cmd_t
@@ -89,16 +71,18 @@ void	err_exit(int condition, char *message, int code);
 arg_t*	create_arg(char *path, char *name);
 int		add_arg(cmd_t *ls, char *path);
 void	free_arg(void *arg);
-int arg_parse(cmd_t *ls, int argc, char **argv);
-void NewFunction(cmd_t *ls);
+int		arg_parse(cmd_t *ls, int argc, char **argv);
 int		fill_arg_info(arg_t *arg);
 void	delete_arg(t_list **lst, t_list *node);
-void	sort_list(t_list **lst);
+// void	sort_list(t_list **lst);
+void	sort_list(t_list **lst, int by_time);
 
 void	swap_ptrs(void **first, void **second);
 char	*str_to_lower(char *str);
 void	slice_last_chars(char **str, char c);
 char	*create_relative_path(char *path, char *name);
 t_list	*reverse_list(t_list *head);
+
+int		set_full_datetime_flag(arg_t *obj);
 
 #endif

@@ -1,5 +1,5 @@
 #include "ls.h"
-#include <errno.h>
+
 /*
 ◦ write
 ◦ opendir
@@ -31,13 +31,13 @@ void	print(t_list *lst)
 	}
 }
 
-int	show_contents(t_list *node, char *parent_path, uint32_t flags);
+int	show_contents(t_list *node, uint32_t flags);
 
 void err_type_check(t_error err)
 {
 	// char	*err_message = "";
 
-	switch (err.type)
+	switch (0)
 	{
 		case LS_ERR_INVALID_OPTION:
 			ft_putendl_fd(err.message, 1);
@@ -103,6 +103,10 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 		
 		// link count
 		tmp = ft_itoa(arg->lnk_cnt);
+		if (!tmp)
+		{
+
+		}
 		write (1, tmp, ft_strlen(tmp));
 		write (1, " ", 1);
 		free(tmp);
@@ -117,6 +121,10 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 		
 		// size
 		tmp = ft_itoa(arg->size);
+		if (!tmp)
+		{
+
+		}
 		write (1, tmp, ft_strlen(tmp));
 		write (1, " ", 1);
 		free(tmp);
@@ -205,17 +213,7 @@ int	check_dir_contents(t_list **subdirs, char *path, uint32_t flags)
 		free(new_path);
 		elem = readdir(dir);
 	}
-	if (flags & LS_OPTION_t)
-	{
-		//sort list with time sorting
-		;
-	}
-	else
-	{
-		printf("just order\n");
-		sort_list(&order);
-	}
-
+	sort_list(&order, (flags & LS_OPTION_t) ? SORT_BY_TIME : SORT_BY_NAME);
 	if (flags & LS_OPTION_r)
 		order = reverse_list(order);
 	if (flags & LS_OPTION_R)
@@ -261,7 +259,7 @@ int	format_output(t_list *parent_node, uint32_t flags)
 	return (ret);
 }
 
-int	show_contents(t_list *node, char *parent_path, uint32_t flags)
+int	show_contents(t_list *node, uint32_t flags)
 {
 	struct stat	statbuf;
 	arg_t		*data = node->data;
@@ -327,8 +325,6 @@ int	main(int argc, char **argv)
 	if (ret) err_type_check(ls->err);
 	if (ls->args == NULL)
 		add_arg(ls, ".");
-	printf ("%d\n", ls->flags);
-
 	tmp_lst = ls->args;
 	while (tmp_lst)
 	{
@@ -344,12 +340,12 @@ int	main(int argc, char **argv)
 		}
 		tmp_lst = tmp_lst->next;
 	}
-	sort_list(&ls->args);
+	sort_list(&ls->args, (ls->flags & LS_OPTION_t) ? SORT_BY_TIME : SORT_BY_NAME);
 	tmp_lst = ls->args;
 	while (tmp_lst)
 	{
 		ls->parent_path = ((arg_t *)tmp_lst->data)->path;
-		ret = show_contents(tmp_lst, ls->parent_path, ls->flags);
+		ret = show_contents(tmp_lst, ls->flags);
 		tmp_lst = tmp_lst->next;
 	}
 	// if (ret)
