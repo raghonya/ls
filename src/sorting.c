@@ -1,5 +1,15 @@
 #include "ls.h"
 
+void	sort_with_flags(t_list **lst, uint32_t flags)
+{
+	sort_list(lst, (flags & LS_OPTION_t) ? SORT_BY_TIME : SORT_BY_NAME);
+	if (flags & LS_OPTION_r)
+		*lst = reverse_list(*lst);
+	// printf("Sorted list with flags (flags = %u):\n", flags);
+	// print(*lst);
+	// printf("Sorted list end\n", flags);
+}
+
 static char	*remove_symbols(char *str)
 {
 	char	*copy;
@@ -75,10 +85,8 @@ void	sort_list(t_list **lst, int sort_by)
 				compare_times(temp, temp2);
 			else if (sort_by == SORT_BY_NAME)
 				compare_names(temp, temp2);
-			else
-				return ;
 			temp2 = temp2->next;
 		}
 		node = node->next;
-	}
+	}	
 }

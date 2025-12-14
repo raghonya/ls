@@ -16,6 +16,7 @@
 
 # include "libft.h"
 # include "error.h"
+# include "triggers.h"
 
 # define STATIC_ARR_LENGTH(arr, type) (size_t)(sizeof(arr) / sizeof(type))
 
@@ -63,18 +64,22 @@ typedef struct cmd_t
 {
 	uint32_t		flags;
 	t_list			*args;
+	t_list			*dir_args;
+	t_list			*file_args;
 	char			*parent_path;
+	uint16_t		triggers;
 	t_error			err;
 } cmd_t;
 
 void	err_exit(int condition, char *message, int code);
-arg_t*	create_arg(char *path, char *name);
-int		add_arg(cmd_t *ls, char *path);
+int		create_arg(arg_t **data, char *path, char *name);
+int		add_arg(t_list **lst, char *path);
 void	free_arg(void *arg);
 int		arg_parse(cmd_t *ls, int argc, char **argv);
 int		fill_arg_info(arg_t *arg);
 void	delete_arg(t_list **lst, t_list *node);
 // void	sort_list(t_list **lst);
+void	sort_with_flags(t_list **lst, uint32_t flags);
 void	sort_list(t_list **lst, int by_time);
 
 void	swap_ptrs(void **first, void **second);
@@ -83,6 +88,11 @@ void	slice_last_chars(char **str, char c);
 char	*create_relative_path(char *path, char *name);
 t_list	*reverse_list(t_list *head);
 
+// Time and date related functions
 int		set_full_datetime_flag(arg_t *obj);
+
+void	print(t_list *lst);
+
+void	err_type_check(t_error err);
 
 #endif

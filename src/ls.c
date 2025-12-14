@@ -31,31 +31,7 @@ void	print(t_list *lst)
 	}
 }
 
-int	show_contents(t_list *node, uint32_t flags);
-
-void err_type_check(t_error err)
-{
-	// char	*err_message = "";
-
-	switch (0)
-	{
-		case LS_ERR_INVALID_OPTION:
-			ft_putendl_fd(err.message, 1);
-			exit(2);
-			// err_message = LS_ERR_MESSAGE_INVALID_OPTION; //pti poxvi code y flagi het
-			// printf ("ooooo\n");
-			// write (1, "ls: invalid")
-			break;
-		case LS_ERR_NO_SUCH_FILE_OR_DIRECTORY:
-			write (1, "", 1);
-		case LS_ERR_PERMISSION_DENIED:
-			write (1, "", 1);
-	}
-
-	// err_message = "yo";
-	// ft_putendl_fd(err_message, STDERR_FILENO);
-	// exit(exit_code); // need to be changed
-}
+int		show_contents(t_list *node, uint32_t flags, int print_dir_name);
 
 int		read_link(char *link, struct stat *statbuf)
 {
@@ -85,7 +61,7 @@ int		read_link(char *link, struct stat *statbuf)
 	free(buf);
 }
 
-int	print_name(arg_t *arg, int is_last, uint32_t flags)
+int		print_name(arg_t *arg, uint32_t flags, int triggers)
 {
 	int			ret;
 	char		*tmp;
@@ -102,14 +78,16 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 		write (1, " ", 1);
 		
 		// link count
-		tmp = ft_itoa(arg->lnk_cnt);
-		if (!tmp)
-		{
-
-		}
-		write (1, tmp, ft_strlen(tmp));
+		ft_putnbr_fd(arg->lnk_cnt, 1);
 		write (1, " ", 1);
-		free(tmp);
+		// tmp = ft_itoa(arg->lnk_cnt);
+		// if (!tmp)
+		// {
+
+		// }
+		// write (1, tmp, ft_strlen(tmp));
+		// write (1, " ", 1);
+		// free(tmp);
 		
 		// owner
 		write (1, arg->owner, ft_strlen(arg->owner));
@@ -120,14 +98,16 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 		write (1, " ", 1);
 		
 		// size
-		tmp = ft_itoa(arg->size);
-		if (!tmp)
-		{
-
-		}
-		write (1, tmp, ft_strlen(tmp));
+		ft_putnbr_fd(arg->size, 1);
 		write (1, " ", 1);
-		free(tmp);
+		// tmp = ft_itoa(arg->size);
+		// if (!tmp)
+		// {
+
+		// }
+		// write (1, tmp, ft_strlen(tmp));
+		// write (1, " ", 1);
+		// free(tmp);
 		
 		// last modified time
 		tmp = ctime(&arg->last_modif);
@@ -141,61 +121,89 @@ int	print_name(arg_t *arg, int is_last, uint32_t flags)
 	else
 	{
 		write(1, arg->name, ft_strlen(arg->name));
-		if (!is_last)
-			write (1, " ", 1);
+		if (!(triggers & DIR_LAST_ELEM))
+			write (1, "  ", 2);
 		else
 			write (1, "\n", 1);
-			
+	}
+
+	return (ret);
+}
+
+int		print_ordered(t_list *order, uint32_t flags, int triggers)
+{
+	if (!order)
+		return (0);
+	while (order)
+	{
+		if (order->next == NULL)
+			triggers |= DIR_LAST_ELEM;
+		print_name(order->data, flags, triggers);
+		order = order->next;
+	}
+	if ((triggers & PRINT_DIR_NAME) && !(triggers & LAST_ARG))// && !(flags & LS_OPTION_R))
+	// || ((flags & LS_OPTION_R) && !(triggers & LAST_ARG)))
+		write (1, "\n", 1);
+}
+
+int		check_recursion(t_list *order, t_list **subdirs)
+{
+	int		ret;
+	arg_t	*data;
+	arg_t	*tmp_arg;
+	t_list	*tmp_lst;
+
+	ret = LS_ERR_RETURN_CODE_NO_ERROR;
+	while (order)
+	{
+		data = order->data;
+		if (data->type == __S_IFDIR \
+		&& ft_strcmp(data->name, ".") != 0 \
+		&& ft_strcmp(data->name, "..") != 0)
+		{
+			tmp_arg = NULL;
+			ret = create_arg(&tmp_arg, data->path, data->name);
+			if (ret)
+			return (LS_ERR_RETURN_CODE_FATAL);
+			t_list *tmp_lst = NULL;
+			tmp_lst = ft_lstnew(tmp_arg);
+			if (!tmp_lst)
+			{
+				// write(2, "Malloc error\n", 13);
+				free_arg(tmp_arg);
+				return (LS_ERR_RETURN_CODE_FATAL);
+			}
+			ft_lstadd_back(subdirs, tmp_lst);
+		}
+		order = order->next;
 	}
 	return (ret);
 }
 
-int	print_ordered(t_list *order, uint32_t flags)
+int		check_dir_contents(t_list **order, t_list **subdirs, char *path, uint32_t flags, int triggers)
 {
-	while (order)
-	{
-		print_name(order->data, order->next == NULL, flags);
-		order = order->next;
-	}
-}
-
-void	check_recursion(t_list *order, t_list **subdirs)
-{
-	arg_t	*data;
-
-	while (order)
-	{
-		data = order->data;
-		if (data->type == DT_DIR \
-		&& ft_strcmp(data->name, ".") != 0 \
-		&& ft_strcmp(data->name, "..") != 0)
-			ft_lstadd_back(subdirs, ft_lstnew(create_arg(data->path, data->name)));
-		order = order->next;
-	}
-}
-
-int	check_dir_contents(t_list **subdirs, char *path, uint32_t flags)
-{
+	int				ret;
 	DIR				*dir;
 	struct dirent	*elem;
-	t_list			*order;
 	char			*new_path;
 
-	order = NULL;
+	ret = 0;
+	// order = NULL;
 	new_path = NULL;
 	dir = opendir(path);
 	if (!dir){
-		puts("opendir");
-		return (2);
+		printf("opendir on %s failed\n", path);
+		return (LS_ERR_RETURN_CODE_FATAL);
 	}
-	elem = readdir(dir);
-	if (flags & LS_OPTION_R)
+	if (triggers & PRINT_DIR_NAME)
 	{
 		write(1, path, ft_strlen(path));
 		write(1, ":\n", 2);
 	}
 	slice_last_chars(&path, '/');
+	elem = readdir(dir);
 	while (elem != NULL)
+	// for (elem = readdir(dir); elem != NULL; elem = readdir(dir))
 	{
 		if (!(LS_OPTION_a & flags) && elem->d_name[0] == '.')
 		{
@@ -203,156 +211,233 @@ int	check_dir_contents(t_list **subdirs, char *path, uint32_t flags)
 			continue ;
 		}
 		new_path = create_relative_path(path, elem->d_name);
-		err_exit(!new_path, "Malloc error", 2);
-		t_list *tmp_lst;
-		tmp_lst = ft_lstnew(create_arg(new_path, elem->d_name));
-		err_exit(!tmp_lst, "Malloc error", 2);
-		((arg_t *)tmp_lst->data)->type = elem->d_type;
-		int ret = fill_arg_info(tmp_lst->data);
-		ft_lstadd_back(&order, tmp_lst);
+		if (!new_path)
+		{
+			closedir(dir);
+			ft_lstclear(order, &free_arg);
+			return (LS_ERR_RETURN_CODE_FATAL);
+		}
+		arg_t *tmp_arg = NULL;
+		ret = create_arg(&tmp_arg, new_path, elem->d_name);
+		if (ret)
+		{
+			free(new_path);
+			closedir(dir);
+			ft_lstclear(order, &free_arg);
+			return (LS_ERR_RETURN_CODE_FATAL);
+		}
+		t_list *tmp_lst = ft_lstnew(tmp_arg);
+		if (!tmp_lst)
+		{
+			write(2, "Malloc error\n", 13);
+			free_arg(tmp_arg);
+			free(new_path);
+			closedir(dir);
+			ft_lstclear(order, &free_arg);
+			return (LS_ERR_RETURN_CODE_FATAL);
+		}
+		// ((arg_t *)tmp_lst->data)->type = elem->d_type;
+		ft_lstadd_back(order, tmp_lst);
+		if (ret)
+		{
+			free(new_path);
+			closedir(dir);
+			ft_lstclear(order, &free_arg);
+			return (ret);
+		}
 		free(new_path);
 		elem = readdir(dir);
 	}
-	sort_list(&order, (flags & LS_OPTION_t) ? SORT_BY_TIME : SORT_BY_NAME);
-	if (flags & LS_OPTION_r)
-		order = reverse_list(order);
+	sort_with_flags(order, flags);
 	if (flags & LS_OPTION_R)
-		check_recursion(order, subdirs);
+	{
+		ret = check_recursion(*order, subdirs);
+		if (ret)
+		{
+			closedir(dir);
+			ft_lstclear(order, &free_arg);
+			return (ret);
+		}
+	}
 	closedir(dir);
-	print_ordered(order, flags);
-	ft_lstclear(&order, &free_arg);
+	// ft_lstclear(order, &free_arg);
 
 	return (0);
 }
 
-int	open_dir(char *path, uint32_t flags)
+int		check_last_dir_recursive(t_list *subdirs, char *path, char *last_dir, int *triggers)
+{
+	char *tmp_str;
+	char *tmp_str_ptr;
+	
+	tmp_str = ft_strdup(path);
+	if (!tmp_str)
+		return (LS_ERR_RETURN_CODE_FATAL);
+	tmp_str_ptr = tmp_str;
+	if (*triggers & LAST_ARG_RECURSION)
+	{
+		if (subdirs)
+		{
+			if (path && ft_strcmp(path, last_dir) == 0)
+			{
+				*triggers &= ~LAST_ARG;
+				free(tmp_str);
+				tmp_str = create_relative_path(last_dir, ((arg_t *)ft_lstlast(subdirs)->data)->name);
+				if (!tmp_str)
+					return (LS_ERR_RETURN_CODE_FATAL);
+			}
+		}
+		else
+		{
+			// printf ("argpath inside: %s\n", path);
+			if (ft_strcmp(path, last_dir) == 0)
+				*triggers |= LAST_ARG;
+		}
+	}
+
+	return (LS_ERR_RETURN_CODE_NO_ERROR);
+}
+
+int		open_dir(arg_t *arg, char *last_dir, uint32_t flags, int triggers)
 {
 	int		ret;
+	char	*tmp_str;
 	t_list	*tmp;
-	t_list	*subdirs;
+	t_list	*order;
+	t_list	*subdirs;;
 
+	order = NULL;
 	subdirs = NULL;
-	ret = check_dir_contents(&subdirs, path, flags);
+	tmp_str = ft_strdup(arg->path);
+	if (!tmp_str)
+		return (LS_ERR_RETURN_CODE_FATAL);
+	ret = check_dir_contents(&order, &subdirs, arg->path, flags, triggers);
 	if (ret)
-		return (ret);
-	tmp = subdirs;
-	while (tmp != NULL)
 	{
-		open_dir(((arg_t *)tmp->data)->path, flags);
+		free(tmp_str);
+		return (ret);
+	}
+	if (triggers & LAST_ARG_RECURSION)
+	{
+		if (subdirs)
+		{
+			if (ft_strcmp(arg->path, last_dir) == 0)
+			{
+				triggers &= ~LAST_ARG;
+				free(tmp_str);
+				tmp_str = create_relative_path(last_dir, ((arg_t *)ft_lstlast(subdirs)->data)->name);
+				if (!tmp_str)
+					return (LS_ERR_RETURN_CODE_FATAL);
+			}
+		}
+		else
+		{
+			if (ft_strcmp(arg->path, last_dir) == 0)
+				triggers |= LAST_ARG;
+		}
+	}
+	print_ordered(order, flags, triggers);
+	tmp = subdirs;
+	while (tmp)
+	{
+		ret = open_dir(tmp->data, tmp_str, flags, triggers);
+		// printf("freeing '%s'\n", tmp_str);
+		if (ret)
+		{
+			write (1, "error\n", 6);
+			tmp = tmp->next;
+			continue ;
+		}
 		tmp = tmp->next;
 	}
+	free(tmp_str);
+	ft_lstclear(&order, &free_arg);
 	ft_lstclear(&subdirs, &free_arg);
-
+	// if (ft_strcmp(rec_entry_path, path))
+	// 	write (1, "\n", 1);
 	return (ret);
 }
 
-int	format_output(t_list *parent_node, uint32_t flags)
-{
-	int			ret;
-	arg_t		*data = ((arg_t *)parent_node->data);
+// int	format_output(t_list *parent_node, uint32_t flags)
+// {
+// 	int			ret;
+// 	arg_t		*data = ((arg_t *)parent_node->data);
 
-	ret = 0;
-	if (data->type == __S_IFDIR)
-		ret = open_dir(data->path, flags);
-	else
-		ret = print_name(data, 0, flags);
-	return (ret);
+// 	ret = 0;
+// 	if (data->type == __S_IFDIR)
+// 		ret = open_dir(data->path, flags);
+// 	else
+// 		ret = print_name(data, parent_node->next == NULL, flags);
+// 	return (ret);
+// }
+
+int		show_contents(t_list *node, uint32_t flags, int triggers)
+{
+	if (!node->next)
+		triggers |= (LAST_ARG | LAST_ARG_RECURSION);
+	return (open_dir(node->data, ((arg_t *)node->data)->path, flags, triggers));
 }
 
-int	show_contents(t_list *node, uint32_t flags)
+int		initialize_cmd(cmd_t **ls)
 {
-	struct stat	statbuf;
-	arg_t		*data = node->data;
-	int			ret;
+	*ls = malloc (sizeof(cmd_t));
+	if (!*ls) 
+		return (LS_ERR_RETURN_CODE_FATAL);
+	(*ls)->flags = 0;
+	(*ls)->dir_args = NULL;
+	(*ls)->file_args = NULL;
+	// (*ls)->parent_path = NULL;
+	(*ls)->triggers = 0;
+	(*ls)->err.code = LS_ERR_RETURN_CODE_NO_ERROR;
+	(*ls)->err.message = NULL;
+	(*ls)->err.type = 0;
 
-	ret = lstat(data->path, &statbuf);
-	if (ret != 0)
-	{
-		write (2, "Error stat: ", 12);
-		write(2, data->path, ft_strlen(data->path));
-		write (2, "\n", 1);
-		return (2);
-	}
-
-	// what after return ???
-	ret = fill_arg_info(data);
-	if (ret) return (ret);
-	// what after return ???
-
-	data->type = statbuf.st_mode & __S_IFMT;
-	format_output(node, flags);
-
-	return (ret);
+	return (LS_ERR_RETURN_CODE_NO_ERROR);
 }
 
-int	check_arg_access(char *path, t_error *err)
-{
-	int			ret;
-	struct stat	sb;
-	DIR			*dir;
-
-	ret = lstat(path, &sb);
-	if (ret != 0)
-	{
-		// write (2, "Error stat: ", 12);
-		// write(2, path, ft_strlen(path));
-		// write (2, "\n", 1);
-		return (2);
-	}
-	if ((sb.st_mode & __S_IFMT) == __S_IFDIR)
-	{
-		dir = opendir(path);
-		if (dir == NULL)
-			return (2);
-		closedir(dir);
-	}
-	return (0);
-}
-
-int	main(int argc, char **argv)
+int		main(int argc, char **argv)
 {
 	int		ret;
 	cmd_t	*ls;
 	t_list	*tmp_lst;
-
-	ls = malloc(sizeof(cmd_t));
-	err_exit(!ls, "Malloc error", 2);
+	
 	if (argc < 1)
 		return (1);
-	ls->flags = 0;
-	ls->args = NULL;
+	initialize_cmd(&ls);
 	ret = arg_parse(ls, argc, argv);
-	if (ret) err_type_check(ls->err);
-	if (ls->args == NULL)
-		add_arg(ls, ".");
-	tmp_lst = ls->args;
-	while (tmp_lst)
+	printf ("err : %d\n" ,ret);
+	if (ret)
 	{
-		ret = check_arg_access(((arg_t *)tmp_lst->data)->path, &ls->err);
-		if (ret)
-		{
-			t_list *tmp2 = tmp_lst;
-			printf ("Error on %s\n", ((arg_t *)tmp_lst->data)->path);
-			tmp_lst = tmp_lst->next;
-			delete_arg(&ls->args, tmp2);
-			err_type_check(ls->err);
-			continue ;
-		}
-		tmp_lst = tmp_lst->next;
+		// if (err_type_check(ls->err) & EXIT_FAILURE)
+		// {
+		// 	// free all info inside ls
+		// 	// free(ls);
+		// 	return (EXIT_FAILURE);
+		// }
+		exit (2);
 	}
-	sort_list(&ls->args, (ls->flags & LS_OPTION_t) ? SORT_BY_TIME : SORT_BY_NAME);
-	tmp_lst = ls->args;
-	while (tmp_lst)
+	if (ls->file_args == NULL && ls->dir_args == NULL)
+		add_arg(&ls->dir_args, ".");
+	if ((ls->dir_args && ls->dir_args->next != NULL) || \
+	(ls->file_args && ls->dir_args != NULL) ||
+	ls->flags & LS_OPTION_R)
+		ls->triggers |= PRINT_DIR_NAME;
+	sort_with_flags(&ls->dir_args, ls->flags);
+	sort_with_flags(&ls->file_args, ls->flags);
+	print_ordered(ls->file_args, ls->flags, ls->triggers);
+	for (tmp_lst = ls->dir_args; tmp_lst != NULL; tmp_lst = tmp_lst->next)
 	{
 		ls->parent_path = ((arg_t *)tmp_lst->data)->path;
-		ret = show_contents(tmp_lst, ls->flags);
-		tmp_lst = tmp_lst->next;
+		ret = show_contents(tmp_lst, ls->flags, ls->triggers);
+		if (ret)
+		{
+			// write (1, "error\n", 6);
+			// write (1, ((arg_t *)tmp_lst->data)->path, ft_strlen(((arg_t *)tmp_lst->data)->path));
+			continue ;
+		}
 	}
-	// if (ret)
-	// 	err_exit(ret, "error");
-		
-	ft_lstclear(&ls->args, &free_arg);
+	ft_lstclear(&ls->dir_args, &free_arg);
+	ft_lstclear(&ls->file_args, &free_arg);
 	free(ls);
-	write (1, "\n", 1);
 	return (0);
 }
