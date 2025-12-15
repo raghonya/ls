@@ -24,18 +24,19 @@ int	calc_date_diff(uint64_t diff)
 
 int	recognize_month(char *month_str)
 {
-	if (ft_strcmp(month_str, "Jan") == 0)		return (JAN);
-	else if (ft_strcmp(month_str, "Feb") == 0)	return (FEB);
-	else if (ft_strcmp(month_str, "Mar") == 0)	return (MAR);
-	else if (ft_strcmp(month_str, "Apr") == 0)	return (APR);
-	else if (ft_strcmp(month_str, "May") == 0)	return (MAY);
-	else if (ft_strcmp(month_str, "Jun") == 0)	return (JUN);
-	else if (ft_strcmp(month_str, "Jul") == 0)	return (JUL);
-	else if (ft_strcmp(month_str, "Aug") == 0)	return (AUG);
-	else if (ft_strcmp(month_str, "Sep") == 0)	return (SEP);
-	else if (ft_strcmp(month_str, "Oct") == 0)	return (OCT);
-	else if (ft_strcmp(month_str, "Nov") == 0)	return (NOV);
-	else if (ft_strcmp(month_str, "Dec") == 0)	return (DEC);
+	if		(ft_strcmp(month_str, "Jan") == 0) return (JAN);
+	else if (ft_strcmp(month_str, "Feb") == 0) return (FEB);
+	else if (ft_strcmp(month_str, "Mar") == 0) return (MAR);
+	else if (ft_strcmp(month_str, "Apr") == 0) return (APR);
+	else if (ft_strcmp(month_str, "May") == 0) return (MAY);
+	else if (ft_strcmp(month_str, "Jun") == 0) return (JUN);
+	else if (ft_strcmp(month_str, "Jul") == 0) return (JUL);
+	else if (ft_strcmp(month_str, "Aug") == 0) return (AUG);
+	else if (ft_strcmp(month_str, "Sep") == 0) return (SEP);
+	else if (ft_strcmp(month_str, "Oct") == 0) return (OCT);
+	else if (ft_strcmp(month_str, "Nov") == 0) return (NOV);
+	else if (ft_strcmp(month_str, "Dec") == 0) return (DEC);
+
 	return (0);
 }
 
@@ -57,6 +58,11 @@ int	parse_ctime(char *time_str, t_my_time *my_time)
 	if (!date_parts || ft_len_2d_array(date_parts) != 5)
 		return (1);
 	my_time->month = recognize_month(date_parts[1]);
+	if (my_time->month == 0)
+	{
+		ft_free_2d_array(date_parts);
+		return (1);
+	}
 	my_time->day = ft_atoi(date_parts[2]);
 	my_time->year = ft_atoi(date_parts[4]);
 	time_parts = ft_split(date_parts[3], ':');
@@ -79,18 +85,54 @@ char *get_current_time()
 	return (ctime(&currentTime));
 }
 
-int set_full_datetime_flag(arg_t *obj)
+int set_full_datetime_flag(time_t input_time, int *is_full_datetime)
 {
 	int			ret;
 	t_my_time	obj_datetime;
 	t_my_time	current_datetime;
 	
-	ret = parse_ctime(ctime(&obj->last_modif), &obj_datetime);
+	ret = parse_ctime(ctime(&input_time), &obj_datetime);
 	if (ret) return (ret);
 	ret = parse_ctime(get_current_time(), &current_datetime);
 	if (ret) return (ret);
-	obj->is_full_datetime = calc_date_diff(
+	*is_full_datetime = calc_date_diff(
 			get_weighted_time(&current_datetime) - 
 			get_weighted_time(&obj_datetime));
 	return (0);
 }
+
+char *format_time(time_t input_time, int is_full_datetime)
+{
+	char	*tmp;
+	char	*time_str;
+	char	*formatted_str;
+	char	**splitted;
+
+	time_str = ctime(&input_time);
+	if (!time_str)
+		return (NULL);
+	formatted_str = NULL;
+	splitted = ft_split(time_str, ' ');
+	if (!splitted || ft_len_2d_array(splitted) != 5)
+		goto end;
+	formatted_str = ft_strjoin_w_delim(splitted[1], splitted[2], ' ');
+	if (!formatted_str)
+		goto end;
+	tmp = formatted_str;
+	if (is_full_datetime)
+	{
+		splitted[3][5] = 0; // take only "HH:MM"
+		formatted_str = ft_strjoin_w_delim(formatted_str, splitted[3], ' ');
+	}
+	else
+	{
+		splitted[4][4] = 0; // take only "yyyy"
+		formatted_str = ft_strjoin_w_delim(formatted_str, splitted[4], ' ');
+	}
+	free (tmp);
+	// if (!formatted_str)
+	// 	goto end;
+end:
+	ft_free_2d_array(splitted);
+	return (formatted_str);
+}	

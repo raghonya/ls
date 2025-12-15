@@ -60,6 +60,7 @@ char	*ft_strnstr(const char	*str, const char *to_find, size_t n);
 char	*ft_strtrim(char const *s1, char const *set);
 char	*ft_substr(char const *s, unsigned int start, size_t len);
 char	*ft_strjoin(char const *s1, char const *s2);
+char	*ft_strjoin_w_delim(char const *s1, char const *s2, char delim);
 char	*ft_itoa(int n);
 char	**ft_split(char const *s, char c);
 size_t	ft_strlen(const char *s);

@@ -1,5 +1,17 @@
 #include "ls.h"
 
+int	create_last_modif_time(time_t mod_time, arg_t *obj)
+{
+	int		ret;
+
+	ret = set_full_datetime_flag(mod_time, &obj->is_full_datetime);
+	if (ret)
+		return (ret);
+	
+
+	return (mod_time);
+}
+
 char *calculate_permissions(mode_t mode)
 {
 	uint16_t	obj_perms;
@@ -47,6 +59,7 @@ char	*check_permissions(mode_t mode)
 
 int	fill_arg_info(arg_t *arg)
 {
+	int				ret;
 	char			*tmp;
 	struct stat		statbuf;
 	struct passwd	*usr_pwd;
@@ -67,12 +80,15 @@ int	fill_arg_info(arg_t *arg)
 
 	// user and group
 	usr_pwd = getpwuid(statbuf.st_uid);
-	if (!usr_pwd) return (LS_ERR_RETURN_CODE_MINOR);
 	grp_pwd = getgrgid(statbuf.st_gid);
-	if (!grp_pwd) return (LS_ERR_RETURN_CODE_MINOR);
+	if (!usr_pwd || !grp_pwd)
+	{
+		// 
+		return (LS_ERR_RETURN_CODE_MINOR);
+	}
 	arg->owner = usr_pwd->pw_name;
 	arg->group = grp_pwd->gr_name;
-	
+
 	// link count
 	arg->lnk_cnt = statbuf.st_nlink;
 
@@ -80,7 +96,14 @@ int	fill_arg_info(arg_t *arg)
 	arg->size = statbuf.st_size;
 
 	// time
+	// arg->last_modif = statbuf.st_mtime;
 	arg->last_modif = statbuf.st_mtime;
+	ret = set_full_datetime_flag(statbuf.st_mtime, &arg->is_full_datetime);
+	if (ret)
+	{
+		// 
+		return (ret);
+	}
 
 	return (LS_ERR_RETURN_CODE_NO_ERROR);
 

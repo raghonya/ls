@@ -45,9 +45,9 @@ int	create_arg(arg_t **data, char *path, char *name)
 		write(2, "Malloc error\n", 13);
 		return (LS_ERR_RETURN_CODE_FATAL);
 	}
-	(*data)->group = "";
+	(*data)->group = NULL;
 	(*data)->lnk_cnt = 0;
-	(*data)->owner = "";
+	(*data)->owner = NULL;
 	(*data)->path = ft_strdup(path);
 	if (!(*data)->path)
 	{
@@ -68,7 +68,7 @@ int	create_arg(arg_t **data, char *path, char *name)
 	(*data)->last_modif = 0;
 	(*data)->type = FILETYPE;
 	(*data)->is_full_datetime = 0;
-	
+
 	ret = fill_arg_info((*data));
 	if (ret)
 		free_arg((*data));
@@ -108,19 +108,19 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 			flag_str = argv[i] + 1;
 			for (int flag = 0; flag_str[flag]; ++flag)
 			{
-				if (ls->flags == 0b11111) break ; // all flags are already set
+				if (ls->opts == 0b11111) break ; // all opts are already set
 				switch (flag_str[flag])
 				{
 					case 'l':
-						ls->flags |= LS_OPTION_l; break ;
+						ls->opts |= LS_OPTION_l; break ;
 					case 'R':
-						ls->flags |= LS_OPTION_R; break ;
+						ls->opts |= LS_OPTION_R; break ;
 					case 'a':
-						ls->flags |= LS_OPTION_a; break ;
+						ls->opts |= LS_OPTION_a; break ;
 					case 'r':
-						ls->flags |= LS_OPTION_r; break ;
+						ls->opts |= LS_OPTION_r; break ;
 					case 't':
-						ls->flags |= LS_OPTION_t; break ;
+						ls->opts |= LS_OPTION_t; break ;
 					default:
 						ls->err.code = LS_ERR_INVALID_OPTION;
 						return (LS_ERR_RETURN_CODE_FATAL);

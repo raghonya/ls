@@ -81,19 +81,7 @@ void	slice_last_chars(char **str, char c)
 
 char *create_relative_path(char *path, char *name)
 {
-	char	*rel_path;
-	char	*tmp;
-
-	rel_path = ft_strjoin(path, "/");
-	if (!rel_path)
-		return (NULL);
-	tmp = rel_path;
-	rel_path = ft_strjoin(rel_path, name);
-	free(tmp);
-	if (!rel_path)
-		return (NULL);
-
-	return (rel_path);
+	return (ft_strjoin_w_delim(path, name, '/'));
 }
 
 t_list	*reverse_list(t_list *head)

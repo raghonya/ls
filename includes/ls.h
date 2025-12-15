@@ -20,8 +20,8 @@
 
 # define STATIC_ARR_LENGTH(arr, type) (size_t)(sizeof(arr) / sizeof(type))
 
-# define LS_ALLOWED_FLAGS			"lRart"
-# define LS_ALLOWED_FLAGS_COUNT		5
+# define LS_ALLOWED_OPTIONS			"lRart"
+# define LS_ALLOWED_OPTIONS_COUNT		5
 
 # define LS_OPTION_l	0b00001
 # define LS_OPTION_R	0b00010
@@ -62,7 +62,7 @@ typedef struct arg_t
 
 typedef struct cmd_t
 {
-	uint32_t		flags;
+	uint32_t		opts;
 	t_list			*args;
 	t_list			*dir_args;
 	t_list			*file_args;
@@ -79,7 +79,7 @@ int		arg_parse(cmd_t *ls, int argc, char **argv);
 int		fill_arg_info(arg_t *arg);
 void	delete_arg(t_list **lst, t_list *node);
 // void	sort_list(t_list **lst);
-void	sort_with_flags(t_list **lst, uint32_t flags);
+void	sort_with_opts(t_list **lst, uint32_t opts);
 void	sort_list(t_list **lst, int by_time);
 
 void	swap_ptrs(void **first, void **second);
@@ -89,7 +89,8 @@ char	*create_relative_path(char *path, char *name);
 t_list	*reverse_list(t_list *head);
 
 // Time and date related functions
-int		set_full_datetime_flag(arg_t *obj);
+int		set_full_datetime_flag(time_t input_time, int *is_full_datetime);
+char	*format_time(time_t input_time, int is_full_datetime);
 
 void	print(t_list *lst);
 

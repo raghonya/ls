@@ -1,6 +1,6 @@
 #include "ls.h"
 
-void	sort_with_flags(t_list **lst, uint32_t flags)
+void	sort_with_opts(t_list **lst, uint32_t flags)
 {
 	sort_list(lst, (flags & LS_OPTION_t) ? SORT_BY_TIME : SORT_BY_NAME);
 	if (flags & LS_OPTION_r)
