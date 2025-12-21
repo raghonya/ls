@@ -71,7 +71,6 @@ int	fill_arg_info(arg_t *arg)
 		// write(1, arg->path, ft_strlen(arg->path));
 		return (LS_ERR_RETURN_CODE_FATAL);
 	}
-
 	// type
 	arg->type = statbuf.st_mode & __S_IFMT;
 
@@ -94,7 +93,7 @@ int	fill_arg_info(arg_t *arg)
 
 	// size
 	arg->size = statbuf.st_size;
-
+	arg->blocks = statbuf.st_blocks;
 	// time
 	// arg->last_modif = statbuf.st_mtime;
 	arg->last_modif = statbuf.st_mtime;

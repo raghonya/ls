@@ -34,5 +34,4 @@ typedef struct s_my_time
 	uint64_t		min;
 } t_my_time;
 
-
 #endif

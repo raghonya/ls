@@ -21,13 +21,13 @@
 # define STATIC_ARR_LENGTH(arr, type) (size_t)(sizeof(arr) / sizeof(type))
 
 # define LS_ALLOWED_OPTIONS			"lRart"
-# define LS_ALLOWED_OPTIONS_COUNT		5
+# define LS_ALLOWED_OPTIONS_COUNT	5
 
-# define LS_OPTION_l	0b00001
-# define LS_OPTION_R	0b00010
-# define LS_OPTION_a	0b00100
-# define LS_OPTION_r	0b01000
-# define LS_OPTION_t	0b10000
+# define LS_OPTION_l	(1 << 1)
+# define LS_OPTION_R	(1 << 2)
+# define LS_OPTION_a	(1 << 3)
+# define LS_OPTION_r	(1 << 4)
+# define LS_OPTION_t	(1 << 5)
 
 # define SORT_BY_NAME	0
 # define SORT_BY_TIME	1
@@ -45,6 +45,30 @@ typedef enum arg_type_t
 	SOCK		= __S_IFSOCK
 } arg_type_t;
 
+typedef struct t_info_max_lengths
+{
+	size_t	lnk_cnt_len;
+	size_t	owner_len;
+	size_t	group_len;
+	size_t	size_len;
+	size_t	day_len;
+} t_info_max_lengths;
+
+// typedef struct arg_t
+// {
+// 	arg_type_t		type;
+// 	char			*perm;
+// 	nlink_t			lnk_cnt;
+// 	char			*owner;
+// 	char			*group;
+// 	off_t			size;
+// 	time_t			last_modif;
+// 	char			*path;
+// 	char			*name;
+// 	off_t			blocks;
+// 	int				is_full_datetime;
+// } arg_t;
+
 typedef struct arg_t
 {
 	arg_type_t		type;
@@ -54,6 +78,7 @@ typedef struct arg_t
 	char			*group;
 	off_t			size;
 	time_t			last_modif;
+	char			**time_split;
 	char			*path;
 	char			*name;
 	off_t			blocks;
@@ -71,29 +96,32 @@ typedef struct cmd_t
 	t_error			err;
 } cmd_t;
 
-void	err_exit(int condition, char *message, int code);
+// void	err_exit(int condition, char *message, int code);
+int		print_ordered(t_list *order, uint32_t opts, int triggers);
+
+// Argument related functions
 int		create_arg(arg_t **data, char *path, char *name);
 int		add_arg(t_list **lst, char *path);
 void	free_arg(void *arg);
 int		arg_parse(cmd_t *ls, int argc, char **argv);
 int		fill_arg_info(arg_t *arg);
 void	delete_arg(t_list **lst, t_list *node);
-// void	sort_list(t_list **lst);
+
+// Sorting functions
 void	sort_with_opts(t_list **lst, uint32_t opts);
 void	sort_list(t_list **lst, int by_time);
-
-void	swap_ptrs(void **first, void **second);
-char	*str_to_lower(char *str);
-void	slice_last_chars(char **str, char c);
-char	*create_relative_path(char *path, char *name);
 t_list	*reverse_list(t_list *head);
 
 // Time and date related functions
 int		set_full_datetime_flag(time_t input_time, int *is_full_datetime);
 char	*format_time(time_t input_time, int is_full_datetime);
 
+// Utils
+char	*str_to_lower(char *str);
+void	slice_last_chars(char **str, char c);
+char	*create_relative_path(char *path, char *name);
+void	swap_ptrs(void **first, void **second);
 void	print(t_list *lst);
-
 void	err_type_check(t_error err);
 
 #endif

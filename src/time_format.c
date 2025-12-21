@@ -3,8 +3,8 @@
 
 int	calc_date_diff(uint64_t diff)
 {
-	int		year;
-	int		month;
+	uint64_t	year;
+	uint64_t	month;
 	// int		day;
 	// int		hour;
 	// int		min;
@@ -101,6 +101,42 @@ int set_full_datetime_flag(time_t input_time, int *is_full_datetime)
 	return (0);
 }
 
+char **format_time_split(time_t input_time, int is_full_datetime)
+{
+	char	*tmp;
+	char	*time_str;
+	char	*formatted_str;
+	char	**splitted;
+
+	time_str = ctime(&input_time);
+	if (!time_str)
+		return (NULL);
+	formatted_str = NULL;
+	splitted = ft_split(time_str, ' ');
+	if (!splitted || ft_len_2d_array(splitted) != 5)
+		goto end;
+	formatted_str = ft_strjoin_w_delim(splitted[1], splitted[2], ' ');
+	if (!formatted_str)
+		goto end;
+	tmp = formatted_str;
+	if (is_full_datetime)
+	{
+		splitted[3][5] = 0; // take only "HH:MM"
+		formatted_str = ft_strjoin_w_delim(formatted_str, splitted[3], ' ');
+	}
+	else
+	{
+		splitted[4][4] = 0; // take only "yyyy"
+		formatted_str = ft_strjoin_w_delim(formatted_str, splitted[4], ' ');
+	}
+	free (tmp);
+end:
+	ft_free_2d_array(splitted);
+	splitted = ft_split(formatted_str, ' ');
+	free(formatted_str);
+	return (splitted);
+}
+
 char *format_time(time_t input_time, int is_full_datetime)
 {
 	char	*tmp;
@@ -130,8 +166,6 @@ char *format_time(time_t input_time, int is_full_datetime)
 		formatted_str = ft_strjoin_w_delim(formatted_str, splitted[4], ' ');
 	}
 	free (tmp);
-	// if (!formatted_str)
-	// 	goto end;
 end:
 	ft_free_2d_array(splitted);
 	return (formatted_str);

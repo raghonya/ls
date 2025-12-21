@@ -8,32 +8,6 @@ void	free_arg(void *arg)
 	free(arg);
 }
 
-int	check_arg_access(char *path, t_error *err, int *is_dir)
-{
-	int			ret;
-	struct stat	sb;
-	DIR			*dir;
-
-	ret = lstat(path, &sb);
-	if (ret != 0)
-	{
-		// write (2, "Error stat: ", 12);
-		// write(2, path, ft_strlen(path));
-		// write (2, "\n", 1);
-		return (2);
-	}
-
-	*is_dir = (sb.st_mode & __S_IFMT) == __S_IFDIR;
-	if (*is_dir)
-	{
-		dir = opendir(path);
-		if (dir == NULL)
-			return (2);
-		closedir(dir);
-	}
-	return (0);
-}
-
 int	create_arg(arg_t **data, char *path, char *name)
 {
 	int	ret;
@@ -93,58 +67,6 @@ int	add_arg(t_list **lst, char *path)
 	}
 	ft_lstadd_back(lst, new_node);
 	return (LS_ERR_RETURN_CODE_NO_ERROR);
-}
-
-int	arg_parse(cmd_t *ls, int argc, char **argv)
-{
-	int		ret;
-	int		is_dir;
-	char	*flag_str;
-
-	for (int i = 1; i < argc; ++i)
-	{
-		if (argv[i][0] == '-' && argv[i][1] != '-')
-		{
-			flag_str = argv[i] + 1;
-			for (int flag = 0; flag_str[flag]; ++flag)
-			{
-				if (ls->opts == 0b11111) break ; // all opts are already set
-				switch (flag_str[flag])
-				{
-					case 'l':
-						ls->opts |= LS_OPTION_l; break ;
-					case 'R':
-						ls->opts |= LS_OPTION_R; break ;
-					case 'a':
-						ls->opts |= LS_OPTION_a; break ;
-					case 'r':
-						ls->opts |= LS_OPTION_r; break ;
-					case 't':
-						ls->opts |= LS_OPTION_t; break ;
-					default:
-						ls->err.code = LS_ERR_INVALID_OPTION;
-						return (LS_ERR_RETURN_CODE_FATAL);
-				}
-			}
-		}
-		else
-		{
-			ret = check_arg_access(argv[i], &ls->err, &is_dir);
-			if (ret)
-			{
-				printf ("Error on '%s'\n", argv[i]);
-				err_type_check(ls->err);
-				continue ;
-			}
-			if (is_dir)
-				ret = add_arg(&ls->dir_args, argv[i]);
-			else
-				ret = add_arg(&ls->file_args, argv[i]);
-			if (ret)
-				return (LS_ERR_RETURN_CODE_FATAL);
-		}
-	}
-	return (0);
 }
 
 void	delete_arg(t_list **lst, t_list *node)

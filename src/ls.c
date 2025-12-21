@@ -61,99 +61,6 @@ int		read_link(char *link, struct stat *statbuf)
 	free(buf);
 }
 
-int		print_name(arg_t *arg, uint32_t opts, int triggers)
-{
-	int			ret;
-	char		*tmp;
-	struct stat	statbuf;
-	char		permissions[11] = "-rwxrwxrwx";
-
-	ret = 0;
-	if (!(LS_OPTION_a & opts) && arg->name[0] == '.')
-		return (0);
-	if (LS_OPTION_l & opts)
-	{
-		// type and permissions
-		write (1, arg->perm, ft_strlen(arg->perm));
-		write (1, " ", 1);
-		
-		// link count
-		ft_putnbr_fd(arg->lnk_cnt, 1);
-		write (1, " ", 1);
-		// tmp = ft_itoa(arg->lnk_cnt);
-		// if (!tmp)
-		// {
-
-		// }
-		// write (1, tmp, ft_strlen(tmp));
-		// write (1, " ", 1);
-		// free(tmp);
-		
-		// owner
-		write (1, arg->owner, ft_strlen(arg->owner));
-		write (1, " ", 1);
-		
-		// group
-		write (1, arg->group, ft_strlen(arg->group));
-		write (1, " ", 1);
-		
-		// size
-		ft_putnbr_fd(arg->size, 1);
-		write (1, " ", 1);
-		// tmp = ft_itoa(arg->size);
-		// if (!tmp)
-		// {
-
-		// }
-		// write (1, tmp, ft_strlen(tmp));
-		// write (1, " ", 1);
-		// free(tmp);
-		
-		// last modified time
-
-		// tmp = ctime(&arg->last_modif);
-		tmp = format_time(arg->last_modif, arg->is_full_datetime);
-		if (!tmp)
-		{
-			// 
-			return (LS_ERR_RETURN_CODE_FATAL);
-		}
-		write(1, tmp, ft_strlen(tmp)); // -1 to remove '\n'
-		write(1, " ", 1);
-		free(tmp);
-
-		// name
-		write (1, arg->name, ft_strlen(arg->name));
-		write (1, "\n", 1);
-	}
-	else
-	{
-		write(1, arg->name, ft_strlen(arg->name));
-		if (!(triggers & DIR_LAST_ELEM))
-			write (1, "  ", 2);
-		else
-			write (1, "\n", 1);
-	}
-
-	return (ret);
-}
-
-int		print_ordered(t_list *order, uint32_t opts, int triggers)
-{
-	if (!order)
-		return (0);
-	while (order)
-	{
-		if (order->next == NULL)
-			triggers |= DIR_LAST_ELEM;
-		print_name(order->data, opts, triggers);
-		order = order->next;
-	}
-	if ((triggers & PRINT_DIR_NAME) && !(triggers & LAST_ARG))// && !(opts & LS_OPTION_R))
-	// || ((opts & LS_OPTION_R) && !(triggers & LAST_ARG)))
-		write (1, "\n", 1);
-}
-
 int		check_recursion(t_list *order, t_list **subdirs)
 {
 	int		ret;
@@ -172,7 +79,7 @@ int		check_recursion(t_list *order, t_list **subdirs)
 			tmp_arg = NULL;
 			ret = create_arg(&tmp_arg, data->path, data->name);
 			if (ret)
-			return (LS_ERR_RETURN_CODE_FATAL);
+				return (LS_ERR_RETURN_CODE_FATAL);
 			t_list *tmp_lst = NULL;
 			tmp_lst = ft_lstnew(tmp_arg);
 			if (!tmp_lst)
@@ -417,7 +324,7 @@ int		main(int argc, char **argv)
 		return (1);
 	initialize_cmd(&ls);
 	ret = arg_parse(ls, argc, argv);
-	printf ("err : %d\n" ,ret);
+	// printf ("err : %d\n" ,ret);
 	if (ret)
 	{
 		// if (err_type_check(ls->err) & EXIT_FAILURE)
@@ -436,7 +343,8 @@ int		main(int argc, char **argv)
 		ls->triggers |= PRINT_DIR_NAME;
 	sort_with_opts(&ls->dir_args, ls->opts);
 	sort_with_opts(&ls->file_args, ls->opts);
-	print_ordered(ls->file_args, ls->opts, ls->triggers);
+	if (ls->file_args)
+		print_ordered(ls->file_args, ls->opts, ls->triggers | DONT_CHECK_OPT_a | DONT_PRINT_TOTAL);
 	for (tmp_lst = ls->dir_args; tmp_lst != NULL; tmp_lst = tmp_lst->next)
 	{
 		ls->parent_path = ((arg_t *)tmp_lst->data)->path;
