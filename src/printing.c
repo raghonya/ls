@@ -1,17 +1,27 @@
 #include "ls.h"
+#include <sys/sysmacros.h>
 
 char **format_time_split(time_t input_time, int is_full_datetime);
 
-void	print_spaces_until_word(int current_len, int target_len)
+// void	print_spaces(int current_len, int target_len)
+// {
+// 	while (current_len < target_len)
+// 	{
+// 		write (1, " ", 1);
+// 		current_len++;
+// 	}
+// }
+
+void	print_spaces(int current_len, int needed)
 {
-	while (current_len < target_len)
+	while (current_len < needed)
 	{
 		write (1, " ", 1);
 		current_len++;
 	}
 }
 
-int		print_name(arg_t *arg, t_info_max_lengths max_lengths, uint32_t opts, int triggers)
+int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
 {
 	char	**tmp;
 
@@ -20,28 +30,49 @@ int		print_name(arg_t *arg, t_info_max_lengths max_lengths, uint32_t opts, int t
 	if (LS_OPTION_l & opts)
 	{
 		// type and permissions
-		// print_spaces_until_word(ft_strlen(arg->perm), 10);
 		write (1, arg->perm, ft_strlen(arg->perm));
 		write (1, " ", 1);
 		
 		// link count
-		print_spaces_until_word(ft_numlen(arg->lnk_cnt), max_lengths.lnk_cnt_len);
+		print_spaces(ft_numlen(arg->lnk_cnt), max_lengths->lnk_cnt_len);
 		ft_putnbr_fd(arg->lnk_cnt, 1);
 		write (1, " ", 1);
 		
 		// owner
-		print_spaces_until_word(ft_strlen(arg->owner), max_lengths.owner_len);
+		// print_spaces(ft_strlen(arg->owner), max_lengths->owner_len);
 		write (1, arg->owner, ft_strlen(arg->owner));
+		print_spaces(ft_strlen(arg->owner), max_lengths->owner_len);
 		write (1, " ", 1);
 		
 		// group
-		print_spaces_until_word(ft_strlen(arg->group), max_lengths.group_len);
+		// print_spaces(ft_strlen(arg->group), max_lengths->group_len);
 		write (1, arg->group, ft_strlen(arg->group));
+		print_spaces(ft_strlen(arg->group), max_lengths->group_len);
 		write (1, " ", 1);
 		
 		// size
-		print_spaces_until_word(ft_numlen(arg->size), max_lengths.size_len);
-		ft_putnbr_fd(arg->size, 1);
+		if (arg->type == CHAR_DEV || arg->type == BLK_DEV)
+		{
+			size_t	major_num;
+			int		major_len;
+			size_t	minor_num;
+			int		minor_len;
+
+			major_num = major(arg->size);
+			minor_num = minor(arg->size);
+			major_len = ft_numlen(major_num);
+			minor_len = ft_numlen(minor_num);
+			print_spaces(major_len, max_lengths->major_len);
+			ft_putnbr_fd(major_num, 1);
+			write (1, ", ", 2);
+			print_spaces(minor_len, max_lengths->minor_len);
+			ft_putnbr_fd(minor_num, 1);
+		}
+		else
+		{
+			print_spaces(ft_numlen(arg->size), max_lengths->size_len);
+			ft_putnbr_fd(arg->size, 1);
+		}
 		write (1, " ", 1);
 
 		// last modified time
@@ -53,7 +84,7 @@ int		print_name(arg_t *arg, t_info_max_lengths max_lengths, uint32_t opts, int t
 		}
 		write(1, tmp[0], ft_strlen(tmp[0]));
 		write(1, " ", 1);
-		print_spaces_until_word(ft_strlen(tmp[1]), max_lengths.day_len);
+		print_spaces(ft_strlen(tmp[1]), max_lengths->day_len);
 		write(1, tmp[1], ft_strlen(tmp[1]));
 		write(1, " ", 1);
 		write(1, tmp[2], ft_strlen(tmp[2]));
@@ -97,7 +128,6 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths)
 	size_t	current_len;
 	char	**time_split;
 
-	ft_memset(max_lengths, 0, sizeof(t_info_max_lengths));
 	while (order)
 	{
 		data = order->data;
@@ -114,7 +144,18 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths)
 		if (current_len > max_lengths->group_len)
 			max_lengths->group_len = current_len;
 		// size
-		current_len = ft_numlen(data->size);
+		if (data->type == CHAR_DEV || data->type == BLK_DEV)
+		{
+			current_len = ft_numlen(major(data->size));
+			if (current_len > max_lengths->major_len)
+				max_lengths->major_len = current_len;
+			current_len = ft_numlen(minor(data->size));
+			if (current_len > max_lengths->minor_len)
+				max_lengths->minor_len = current_len;
+			current_len = max_lengths->major_len + max_lengths->minor_len + 2; // ", "
+		}
+		else
+			current_len = ft_numlen(data->size);
 		if (current_len > max_lengths->size_len)
 			max_lengths->size_len = current_len;
 		// day
@@ -130,17 +171,17 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths)
 	return (0);
 }
 
-int		print_ordered(t_list *order, uint32_t opts, int triggers)
+int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
 {
-	t_info_max_lengths	max_lengths;
-	int					ret;
+	int		ret;
+
 	if ((LS_OPTION_l & opts) && !(triggers & DONT_PRINT_TOTAL))
 	{
 		print_total_blocks(order);
 	}
-	ret = count_arg_info_lengths(order, &max_lengths);
-	if (ret)
-		return (ret);
+	// ret = count_arg_info_lengths(order, &max_lengths);
+	// if (ret)
+	// 	return (ret);
 	while (order)
 	{
 		if (order->next == NULL)

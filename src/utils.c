@@ -1,5 +1,28 @@
 #include "ls.h"
 
+void	print(t_list *lst)
+{
+	while (lst)
+	{
+		arg_t *data = lst->data;
+		printf("%s\n", data->name);
+		lst = lst->next;
+	}
+}
+
+void	print_all_info(arg_t *elem)
+{
+	printf ("perms: %s\n", elem->perm);
+	printf ("links: %d\n", elem->lnk_cnt);
+	printf ("owner: %s\n", elem->owner);
+	printf ("group: %s\n", elem->group);
+	printf ("size: %d\n", elem->size);
+	printf ("time: %d\n", (uintmax_t)elem->last_modif);
+	printf ("path: %s\n", elem->path);
+	printf ("name: %s\n", elem->name);
+	printf ("blocks: %d\n", elem->blocks);
+}
+
 void err_type_check(t_error err)
 {
 	// char	*err_message = "";
@@ -22,19 +45,6 @@ void err_type_check(t_error err)
 	// err_message = "yo";
 	// ft_putendl_fd(err_message, STDERR_FILENO);
 	// exit(exit_code); // need to be changed
-}
-
-void	print_all_info(arg_t *elem)
-{
-	printf ("perms: %s\n", elem->perm);
-	printf ("links: %d\n", elem->lnk_cnt);
-	printf ("owner: %s\n", elem->owner);
-	printf ("group: %s\n", elem->group);
-	printf ("size: %d\n", elem->size);
-	printf ("time: %d\n", (uintmax_t)elem->last_modif);
-	printf ("path: %s\n", elem->path);
-	printf ("name: %s\n", elem->name);
-	printf ("blocks: %d\n", elem->blocks);
 }
 
 void	err_exit(int condition, char *message, int code)

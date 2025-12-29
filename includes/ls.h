@@ -50,6 +50,8 @@ typedef struct t_info_max_lengths
 	size_t	lnk_cnt_len;
 	size_t	owner_len;
 	size_t	group_len;
+	size_t	major_len;
+	size_t	minor_len;
 	size_t	size_len;
 	size_t	day_len;
 } t_info_max_lengths;
@@ -87,17 +89,18 @@ typedef struct arg_t
 
 typedef struct cmd_t
 {
-	uint32_t		opts;
-	t_list			*args;
-	t_list			*dir_args;
-	t_list			*file_args;
-	char			*parent_path;
-	uint16_t		triggers;
-	t_error			err;
+	uint32_t			opts;
+	t_list				*args;
+	t_list				*dir_args;
+	t_list				*file_args;
+	t_info_max_lengths	max_lengths;
+	char				*parent_path;
+	uint16_t			triggers;
+	t_error				err;
 } cmd_t;
 
 // void	err_exit(int condition, char *message, int code);
-int		print_ordered(t_list *order, uint32_t opts, int triggers);
+int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers);
 
 // Argument related functions
 int		create_arg(arg_t **data, char *path, char *name);
@@ -123,5 +126,9 @@ char	*create_relative_path(char *path, char *name);
 void	swap_ptrs(void **first, void **second);
 void	print(t_list *lst);
 void	err_type_check(t_error err);
+
+// Tmp
+void	print_all_info(arg_t *elem);
+void	print(t_list *lst);
 
 #endif

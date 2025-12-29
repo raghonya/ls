@@ -5,6 +5,8 @@ void	free_arg(void *arg)
 	free(((arg_t *)arg)->name);
 	free(((arg_t *)arg)->path);
 	free(((arg_t *)arg)->perm);
+	free(((arg_t *)arg)->owner);
+	free(((arg_t *)arg)->group);
 	free(arg);
 }
 

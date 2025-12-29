@@ -21,17 +21,8 @@
 ◦ exit
 */
 
-void	print(t_list *lst)
-{
-	while (lst)
-	{
-		arg_t *data = lst->data;
-		printf("%s\n", data->name);
-		lst = lst->next;
-	}
-}
-
-int		show_contents(t_list *node, uint32_t opts, int print_dir_name);
+int		show_contents(t_list *node, t_info_max_lengths *max_lengths, uint32_t opts, int print_dir_name);
+int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths);
 
 int		read_link(char *link, struct stat *statbuf)
 {
@@ -151,7 +142,6 @@ int		check_dir_contents(t_list **order, t_list **subdirs, char *path, uint32_t o
 			ft_lstclear(order, &free_arg);
 			return (LS_ERR_RETURN_CODE_FATAL);
 		}
-		// ((arg_t *)tmp_lst->data)->type = elem->d_type;
 		ft_lstadd_back(order, tmp_lst);
 		if (ret)
 		{
@@ -213,7 +203,7 @@ int		check_last_dir_recursive(t_list *subdirs, char *path, char *last_dir, int *
 	return (LS_ERR_RETURN_CODE_NO_ERROR);
 }
 
-int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers)
+int		open_dir(arg_t *arg, char *last_dir, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
 {
 	int		ret;
 	char	*tmp_str;
@@ -251,11 +241,11 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers)
 				triggers |= LAST_ARG;
 		}
 	}
-	print_ordered(order, opts, triggers);
+	print_ordered(order, max_lengths, opts, triggers);
 	tmp = subdirs;
 	while (tmp)
 	{
-		ret = open_dir(tmp->data, tmp_str, opts, triggers);
+		ret = open_dir(tmp->data, tmp_str, max_lengths, opts, triggers);
 		// printf("freeing '%s'\n", tmp_str);
 		if (ret)
 		{
@@ -273,20 +263,7 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers)
 	return (ret);
 }
 
-// int	format_output(t_list *parent_node, uint32_t opts)
-// {
-// 	int			ret;
-// 	arg_t		*data = ((arg_t *)parent_node->data);
-
-// 	ret = 0;
-// 	if (data->type == __S_IFDIR)
-// 		ret = open_dir(data->path, opts);
-// 	else
-// 		ret = print_name(data, parent_node->next == NULL, opts);
-// 	return (ret);
-// }
-
-int		show_contents(t_list *node, uint32_t opts, int triggers)
+int		show_contents(t_list *node, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
 {
 	if (!node->next)
 	{
@@ -294,7 +271,7 @@ int		show_contents(t_list *node, uint32_t opts, int triggers)
 		if (opts & LS_OPTION_R)
 			triggers |= LAST_ARG_RECURSION;
 	}
-	return (open_dir(node->data, ((arg_t *)node->data)->path, opts, triggers));
+	return (open_dir(node->data, ((arg_t *)node->data)->path, max_lengths, opts, triggers));
 }
 
 int		initialize_cmd(cmd_t **ls)
@@ -310,8 +287,20 @@ int		initialize_cmd(cmd_t **ls)
 	(*ls)->err.code = LS_ERR_RETURN_CODE_NO_ERROR;
 	(*ls)->err.message = NULL;
 	(*ls)->err.type = 0;
+	ft_memset(&(*ls)->max_lengths, 0, sizeof(t_info_max_lengths));
 
 	return (LS_ERR_RETURN_CODE_NO_ERROR);
+}
+
+void print_arg_lens(t_info_max_lengths *max_lengths)
+{
+	printf ("Link cnt len: %zu\n", max_lengths->lnk_cnt_len);
+	printf ("Owner len: %zu\n", max_lengths->owner_len);
+	printf ("Group len: %zu\n", max_lengths->group_len);
+	printf ("Major len: %zu\n", max_lengths->major_len);
+	printf ("Minor len: %zu\n", max_lengths->minor_len);
+	printf ("Size len: %zu\n", max_lengths->size_len);
+	printf ("Day len: %zu\n", max_lengths->day_len);
 }
 
 int		main(int argc, char **argv)
@@ -343,12 +332,26 @@ int		main(int argc, char **argv)
 		ls->triggers |= PRINT_DIR_NAME;
 	sort_with_opts(&ls->dir_args, ls->opts);
 	sort_with_opts(&ls->file_args, ls->opts);
+	ret = count_arg_info_lengths(ls->dir_args, &ls->max_lengths);
+	if (ret)
+	{
+		// write (1, "error\n", 6);
+		// clean up ls
+		return (LS_ERR_RETURN_CODE_FATAL);
+	}
+	ret = count_arg_info_lengths(ls->file_args, &ls->max_lengths);
+	if (ret)
+	{
+		// write (1, "error\n", 6);
+		// clean up ls
+		return (LS_ERR_RETURN_CODE_FATAL);
+	}
 	if (ls->file_args)
-		print_ordered(ls->file_args, ls->opts, ls->triggers | DONT_CHECK_OPT_a | DONT_PRINT_TOTAL);
+		print_ordered(ls->file_args, &ls->max_lengths, ls->opts, ls->triggers | DONT_CHECK_OPT_a | DONT_PRINT_TOTAL);
 	for (tmp_lst = ls->dir_args; tmp_lst != NULL; tmp_lst = tmp_lst->next)
 	{
 		ls->parent_path = ((arg_t *)tmp_lst->data)->path;
-		ret = show_contents(tmp_lst, ls->opts, ls->triggers);
+		ret = show_contents(tmp_lst, &ls->max_lengths, ls->opts, ls->triggers);
 		if (ret)
 		{
 			// write (1, "error\n", 6);

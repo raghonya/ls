@@ -85,15 +85,23 @@ int	fill_arg_info(arg_t *arg)
 		// 
 		return (LS_ERR_RETURN_CODE_MINOR);
 	}
-	arg->owner = usr_pwd->pw_name;
-	arg->group = grp_pwd->gr_name;
+	arg->owner = ft_strdup(usr_pwd->pw_name);
+	arg->group = ft_strdup(grp_pwd->gr_name);
+	if (!arg->owner || !arg->group)
+	{
+		// 
+		return (LS_ERR_RETURN_CODE_MINOR);
+	}
 
 	// link count
 	arg->lnk_cnt = statbuf.st_nlink;
 
 	// size
 	arg->size = statbuf.st_size;
+	if (arg->type == CHAR_DEV || arg->type == BLK_DEV)
+		arg->size = statbuf.st_rdev;
 	arg->blocks = statbuf.st_blocks;
+
 	// time
 	// arg->last_modif = statbuf.st_mtime;
 	arg->last_modif = statbuf.st_mtime;
@@ -103,7 +111,12 @@ int	fill_arg_info(arg_t *arg)
 		// 
 		return (ret);
 	}
-
+	// printf ("filling info for: %s\n", arg->path);
+	// printf ("stat size: %ld\n", statbuf.st_size);
+	// printf ("stat blocks: %ld\n", statbuf.st_blocks);
+	// printf ("stat mode: %o\n", statbuf.st_mode);
+	// printf ("username: %s\n", getpwuid(statbuf.st_uid)->pw_name);
+	// printf ("groupname: %s\n", getgrgid(statbuf.st_gid)->gr_name);
 	return (LS_ERR_RETURN_CODE_NO_ERROR);
 
 }
