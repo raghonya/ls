@@ -104,41 +104,6 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 					continue ;
 				}
 		}
-		// if (argv[i][0] == '-' && argv[i][1] != '-')
-		// {
-		// 	flag_str = argv[i] + 1;
-		// 	for (int flag = 0; flag_str[flag]; ++flag)
-		// 	{
-		// 		if (ls->opts == 0b11111) break ; // all opts are already set
-		// 		switch (flag_str[flag])
-		// 		{
-		// 			case 'l': ls->opts |= LS_OPTION_l; break ;
-		// 			case 'R': ls->opts |= LS_OPTION_R; break ;
-		// 			case 'a': ls->opts |= LS_OPTION_a; break ;
-		// 			case 'r': ls->opts |= LS_OPTION_r; break ;
-		// 			case 't': ls->opts |= LS_OPTION_t; break ;
-		// 			default:
-		// 				ls->err.code = LS_ERR_INVALID_OPTION;
-		// 				return (LS_ERR_RETURN_CODE_FATAL);
-		// 		}
-		// 	}
-		// }
-		// else
-		// {
-		// 	ret = check_arg_access(argv[i], &ls->err, &is_dir);
-		// 	if (ret)
-		// 	{
-		// 		printf ("Error on '%s'\n", argv[i]);
-		// 		err_type_check(ls->err);
-		// 		continue ;
-		// 	}
-		// 	if (is_dir)
-		// 		ret = add_arg(&ls->dir_args, argv[i]);
-		// 	else
-		// 		ret = add_arg(&ls->file_args, argv[i]);
-		// 	if (ret)
-		// 		return (LS_ERR_RETURN_CODE_FATAL);
-		// }
 	}
 	return (0);
 }

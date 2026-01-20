@@ -23,30 +23,6 @@ void	print_all_info(arg_t *elem)
 	printf ("blocks: %d\n", elem->blocks);
 }
 
-void err_type_check(t_error err)
-{
-	// char	*err_message = "";
-
-	switch (0)
-	{
-		case LS_ERR_INVALID_OPTION:
-			ft_putendl_fd(err.message, 1);
-			exit(2);
-			// err_message = LS_ERR_MESSAGE_INVALID_OPTION; //pti poxvi code y flagi het
-			// printf ("ooooo\n");
-			// write (1, "ls: invalid")
-			break;
-		case LS_ERR_NO_SUCH_FILE_OR_DIRECTORY:
-			write (1, "", 1);
-		case LS_ERR_PERMISSION_DENIED:
-			write (1, "", 1);
-	}
-
-	// err_message = "yo";
-	// ft_putendl_fd(err_message, STDERR_FILENO);
-	// exit(exit_code); // need to be changed
-}
-
 void	err_exit(int condition, char *message, int code)
 {
 	if (condition)

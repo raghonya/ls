@@ -21,36 +21,8 @@
 ◦ exit
 */
 
-int		show_contents(t_list *node, t_info_max_lengths *max_lengths, uint32_t opts, int print_dir_name);
+int		show_contents(t_list *node, uint32_t opts, int print_dir_name);
 int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths);
-
-int		read_link(char *link, struct stat *statbuf)
-{
-
-	char	*buf;
-	ssize_t	bufsiz, nbytes;
-
-	bufsiz = statbuf->st_size + 1;
-
-	if (statbuf->st_size == 0)
-		bufsiz = PATH_MAX;
-
-	buf = malloc(bufsiz);
-	if (buf == NULL) {
-		perror("malloc");
-		exit(EXIT_FAILURE);
-	}
-
-	nbytes = readlink(link, buf, bufsiz);
-	if (nbytes == -1) {
-		perror("readlink");
-		exit(EXIT_FAILURE);
-	}
-
-	printf("'%s' points to '%.*s'\n", link, (int) nbytes, buf);
-
-	free(buf);
-}
 
 int		check_recursion(t_list *order, t_list **subdirs)
 {
@@ -203,13 +175,14 @@ int		check_last_dir_recursive(t_list *subdirs, char *path, char *last_dir, int *
 	return (LS_ERR_RETURN_CODE_NO_ERROR);
 }
 
-int		open_dir(arg_t *arg, char *last_dir, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
+int		open_dir(arg_t *arg, char *last_dir,uint32_t opts, int triggers)
 {
-	int		ret;
-	char	*tmp_str;
-	t_list	*tmp;
-	t_list	*order;
-	t_list	*subdirs;;
+	int					ret;
+	char				*tmp_str;
+	t_list				*tmp;
+	t_list				*order;
+	t_list				*subdirs;
+	t_info_max_lengths	local_max_lengths;
 
 	order = NULL;
 	subdirs = NULL;
@@ -221,6 +194,14 @@ int		open_dir(arg_t *arg, char *last_dir, t_info_max_lengths *max_lengths, uint3
 	{
 		free(tmp_str);
 		return (ret);
+	}
+	ft_bzero(&local_max_lengths, sizeof(t_info_max_lengths));
+	ret = count_arg_info_lengths(order, &local_max_lengths);
+	if (ret)
+	{
+		// write (1, "error\n", 6);
+		// clean up ls
+		return (LS_ERR_RETURN_CODE_FATAL);
 	}
 	if (triggers & LAST_ARG_RECURSION)
 	{
@@ -241,11 +222,11 @@ int		open_dir(arg_t *arg, char *last_dir, t_info_max_lengths *max_lengths, uint3
 				triggers |= LAST_ARG;
 		}
 	}
-	print_ordered(order, max_lengths, opts, triggers);
+	print_ordered(order, &local_max_lengths, opts, triggers);
 	tmp = subdirs;
 	while (tmp)
 	{
-		ret = open_dir(tmp->data, tmp_str, max_lengths, opts, triggers);
+		ret = open_dir(tmp->data, tmp_str, opts, triggers | RECURSION_FUNC);
 		// printf("freeing '%s'\n", tmp_str);
 		if (ret)
 		{
@@ -263,7 +244,7 @@ int		open_dir(arg_t *arg, char *last_dir, t_info_max_lengths *max_lengths, uint3
 	return (ret);
 }
 
-int		show_contents(t_list *node, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
+int		show_contents(t_list *node, uint32_t opts, int triggers)
 {
 	if (!node->next)
 	{
@@ -271,7 +252,7 @@ int		show_contents(t_list *node, t_info_max_lengths *max_lengths, uint32_t opts,
 		if (opts & LS_OPTION_R)
 			triggers |= LAST_ARG_RECURSION;
 	}
-	return (open_dir(node->data, ((arg_t *)node->data)->path, max_lengths, opts, triggers));
+	return (open_dir(node->data, ((arg_t *)node->data)->path, opts, triggers));
 }
 
 int		initialize_cmd(cmd_t **ls)
@@ -305,10 +286,11 @@ void print_arg_lens(t_info_max_lengths *max_lengths)
 
 int		main(int argc, char **argv)
 {
-	int		ret;
-	cmd_t	*ls;
-	t_list	*tmp_lst;
-	
+	int					ret;
+	cmd_t				*ls;
+	t_list				*tmp_lst;
+	t_info_max_lengths	max_lengths;
+
 	if (argc < 1)
 		return (1);
 	initialize_cmd(&ls);
@@ -322,7 +304,7 @@ int		main(int argc, char **argv)
 		// 	// free(ls);
 		// 	return (EXIT_FAILURE);
 		// }
-		exit (2);
+		exit (LS_ERR_RETURN_CODE_FATAL);
 	}
 	if (ls->file_args == NULL && ls->dir_args == NULL)
 		add_arg(&ls->dir_args, ".");
@@ -332,14 +314,8 @@ int		main(int argc, char **argv)
 		ls->triggers |= PRINT_DIR_NAME;
 	sort_with_opts(&ls->dir_args, ls->opts);
 	sort_with_opts(&ls->file_args, ls->opts);
-	ret = count_arg_info_lengths(ls->dir_args, &ls->max_lengths);
-	if (ret)
-	{
-		// write (1, "error\n", 6);
-		// clean up ls
-		return (LS_ERR_RETURN_CODE_FATAL);
-	}
-	ret = count_arg_info_lengths(ls->file_args, &ls->max_lengths);
+	// ret = count_arg_info_lengths(ls->dir_args, &max_lengths);
+	ret = count_arg_info_lengths(ls->file_args, &max_lengths);
 	if (ret)
 	{
 		// write (1, "error\n", 6);
@@ -347,11 +323,11 @@ int		main(int argc, char **argv)
 		return (LS_ERR_RETURN_CODE_FATAL);
 	}
 	if (ls->file_args)
-		print_ordered(ls->file_args, &ls->max_lengths, ls->opts, ls->triggers | DONT_CHECK_OPT_a | DONT_PRINT_TOTAL);
+		print_ordered(ls->file_args, &max_lengths, ls->opts, ls->triggers | DONT_CHECK_OPT_a | DONT_PRINT_TOTAL);
 	for (tmp_lst = ls->dir_args; tmp_lst != NULL; tmp_lst = tmp_lst->next)
 	{
 		ls->parent_path = ((arg_t *)tmp_lst->data)->path;
-		ret = show_contents(tmp_lst, &ls->max_lengths, ls->opts, ls->triggers);
+		ret = show_contents(tmp_lst, ls->opts, ls->triggers);
 		if (ret)
 		{
 			// write (1, "error\n", 6);

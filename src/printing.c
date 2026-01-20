@@ -3,15 +3,6 @@
 
 char **format_time_split(time_t input_time, int is_full_datetime);
 
-// void	print_spaces(int current_len, int target_len)
-// {
-// 	while (current_len < target_len)
-// 	{
-// 		write (1, " ", 1);
-// 		current_len++;
-// 	}
-// }
-
 void	print_spaces(int current_len, int needed)
 {
 	while (current_len < needed)
@@ -19,6 +10,52 @@ void	print_spaces(int current_len, int needed)
 		write (1, " ", 1);
 		current_len++;
 	}
+}
+
+void	print_major_minor(off_t size, t_info_max_lengths *max_lengths)
+{
+	size_t	major_num;
+	int		major_len;
+	size_t	minor_num;
+	int		minor_len;
+
+	major_num = major(size);
+	minor_num = minor(size);
+	major_len = ft_numlen(major_num);
+	minor_len = ft_numlen(minor_num);
+	print_spaces(major_len, max_lengths->major_len);
+	ft_putnbr_fd(major_num, 1);
+	write (1, ", ", 2);
+	print_spaces(minor_len, max_lengths->minor_len);
+	ft_putnbr_fd(minor_num, 1);
+}
+
+int		print_link(char *link, size_t size)
+{
+
+	char	*buf;
+	ssize_t	bufsiz;
+	ssize_t	nbytes;
+
+	bufsiz = size + 1;
+
+	if (size == 0)
+		bufsiz = PATH_MAX;
+
+	buf = malloc(bufsiz);
+	if (buf == NULL) {
+		// perror("malloc");
+		return (LS_ERR_RETURN_CODE_FATAL);
+	}
+
+	nbytes = readlink(link, buf, bufsiz);
+	if (nbytes == -1) {
+		// perror("readlink");
+		return (LS_ERR_RETURN_CODE_FATAL);
+	}
+
+	write (1, buf, nbytes);
+	free(buf);
 }
 
 int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
@@ -30,7 +67,7 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 	if (LS_OPTION_l & opts)
 	{
 		// type and permissions
-		write (1, arg->perm, ft_strlen(arg->perm));
+		ft_putstr_fd(arg->perm, 1);
 		write (1, " ", 1);
 		
 		// link count
@@ -40,33 +77,20 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 		
 		// owner
 		// print_spaces(ft_strlen(arg->owner), max_lengths->owner_len);
-		write (1, arg->owner, ft_strlen(arg->owner));
+		ft_putstr_fd(arg->owner, 1);
 		print_spaces(ft_strlen(arg->owner), max_lengths->owner_len);
 		write (1, " ", 1);
 		
 		// group
 		// print_spaces(ft_strlen(arg->group), max_lengths->group_len);
-		write (1, arg->group, ft_strlen(arg->group));
+		ft_putstr_fd(arg->group, 1);
 		print_spaces(ft_strlen(arg->group), max_lengths->group_len);
 		write (1, " ", 1);
 		
 		// size
 		if (arg->type == CHAR_DEV || arg->type == BLK_DEV)
 		{
-			size_t	major_num;
-			int		major_len;
-			size_t	minor_num;
-			int		minor_len;
-
-			major_num = major(arg->size);
-			minor_num = minor(arg->size);
-			major_len = ft_numlen(major_num);
-			minor_len = ft_numlen(minor_num);
-			print_spaces(major_len, max_lengths->major_len);
-			ft_putnbr_fd(major_num, 1);
-			write (1, ", ", 2);
-			print_spaces(minor_len, max_lengths->minor_len);
-			ft_putnbr_fd(minor_num, 1);
+			print_major_minor(arg->size, max_lengths);
 		}
 		else
 		{
@@ -82,6 +106,7 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 			// 
 			return (LS_ERR_RETURN_CODE_FATAL);
 		}
+		
 		write(1, tmp[0], ft_strlen(tmp[0]));
 		write(1, " ", 1);
 		print_spaces(ft_strlen(tmp[1]), max_lengths->day_len);
@@ -93,6 +118,11 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 
 		// name
 		write (1, arg->name, ft_strlen(arg->name));
+		if (arg->type == LINK)
+		{
+			write (1, " -> ", 4);
+			print_link(arg->path, arg->size);
+		}
 		write (1, "\n", 1);
 	}
 	else
@@ -168,7 +198,7 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths)
 		ft_free_2d_array(time_split);
 		order = order->next;
 	}
-	return (0);
+	return (LS_ERR_RETURN_CODE_NO_ERROR);
 }
 
 int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
