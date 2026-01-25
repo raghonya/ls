@@ -45,13 +45,13 @@ int		print_link(char *link, size_t size)
 	buf = malloc(bufsiz);
 	if (buf == NULL) {
 		// perror("malloc");
-		return (LS_ERR_RETURN_CODE_FATAL);
+		return (LS_RETURN_CODE_FATAL);
 	}
 
 	nbytes = readlink(link, buf, bufsiz);
 	if (nbytes == -1) {
 		// perror("readlink");
-		return (LS_ERR_RETURN_CODE_FATAL);
+		return (LS_RETURN_CODE_FATAL);
 	}
 
 	write (1, buf, nbytes);
@@ -104,7 +104,7 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 		if (!tmp)
 		{
 			// 
-			return (LS_ERR_RETURN_CODE_FATAL);
+			return (LS_RETURN_CODE_FATAL);
 		}
 		
 		write(1, tmp[0], ft_strlen(tmp[0]));
@@ -134,7 +134,7 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 			write (1, "\n", 1);
 	}
 
-	return (LS_ERR_RETURN_CODE_NO_ERROR);
+	return (LS_RETURN_CODE_NO_ERROR);
 }
 
 void	print_total_blocks(t_list *order)
@@ -191,14 +191,14 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths)
 		// day
 		time_split = format_time_split(data->last_modif, data->is_full_datetime);
 		if (!time_split)
-			return (LS_ERR_RETURN_CODE_FATAL);
+			return (LS_RETURN_CODE_FATAL);
 		current_len = ft_strlen(time_split[1]);
 		if (current_len > max_lengths->day_len)
 			max_lengths->day_len = current_len;
 		ft_free_2d_array(time_split);
 		order = order->next;
 	}
-	return (LS_ERR_RETURN_CODE_NO_ERROR);
+	return (LS_RETURN_CODE_NO_ERROR);
 }
 
 int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)

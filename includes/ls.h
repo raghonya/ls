@@ -32,7 +32,8 @@
 # define SORT_BY_NAME	0
 # define SORT_BY_TIME	1
 
-//# define LS_ERR_MESSAGE_NO_SUCH_FILE_OR_DIRECTORY "ls: cannot access '': No such file or directory"
+extern int	g_err_type;
+extern int	g_err_code;
 
 typedef enum arg_type_t
 {
@@ -97,6 +98,7 @@ typedef struct cmd_t
 	char				*parent_path;
 	uint16_t			triggers;
 	t_error				err;
+	char				has_error;
 } cmd_t;
 
 // void	err_exit(int condition, char *message, int code);
@@ -125,7 +127,9 @@ void	slice_last_chars(char **str, char c);
 char	*create_relative_path(char *path, char *name);
 void	swap_ptrs(void **first, void **second);
 void	print(t_list *lst);
-void	err_type_check(t_error err);
+// void	err_type_check(t_error err);
+int		_err_code(int trigger);
+void	print_error(char *name, int type);
 
 // Tmp
 void	print_all_info(arg_t *elem);

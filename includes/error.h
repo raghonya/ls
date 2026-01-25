@@ -1,6 +1,7 @@
 #ifndef ERROR_H
 # define ERROR_H
 
+# define LS_ERR_NO_ERROR					0
 # define LS_ERR_PERMISSION_DENIED			1
 # define LS_ERR_NOT_ENOUGH_MEMORY			2
 # define LS_ERR_NO_SUCH_FILE_OR_DIRECTORY	3
@@ -8,9 +9,9 @@
 
 typedef enum ret_code
 {
-	LS_ERR_RETURN_CODE_NO_ERROR = 0,
-	LS_ERR_RETURN_CODE_MINOR,
-	LS_ERR_RETURN_CODE_FATAL
+	LS_RETURN_CODE_NO_ERROR = 0,
+	LS_RETURN_CODE_MINOR,
+	LS_RETURN_CODE_FATAL
 } ret_code;
 
 // typedef enum e_err_type

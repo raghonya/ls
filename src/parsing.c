@@ -9,10 +9,8 @@ int	check_arg_access(char *path, t_error *err, int *is_dir)
 	ret = lstat(path, &sb);
 	if (ret != 0)
 	{
-		// write (2, "Error stat: ", 12);
-		// write(2, path, ft_strlen(path));
-		// write (2, "\n", 1);
-		return (2);
+		print_error(path, LS_ERR_NO_SUCH_FILE_OR_DIRECTORY);
+		return (LS_RETURN_CODE_FATAL);
 	}
 
 	*is_dir = ((sb.st_mode & __S_IFMT) == __S_IFDIR);
@@ -20,10 +18,13 @@ int	check_arg_access(char *path, t_error *err, int *is_dir)
 	{
 		dir = opendir(path);
 		if (dir == NULL)
-			return (2);
+		{
+			print_error(path, LS_ERR_PERMISSION_DENIED);
+			return (LS_RETURN_CODE_FATAL);
+		}
 		closedir(dir);
 	}
-	return (0);
+	return (LS_ERR_NO_ERROR);
 }
 
 int		non_option_arg_parse(cmd_t *ls, char *path)
@@ -34,17 +35,11 @@ int		non_option_arg_parse(cmd_t *ls, char *path)
 
 	ret = check_arg_access(path, &ls->err, &is_dir);
 	if (ret)
-	{
-		printf ("Error on '%s'\n", path);
-		// err_type_check(&ls->err);
 		return (ret);
-	}
 	if (is_dir)
 		ret = add_arg(&ls->dir_args, path);
 	else
 		ret = add_arg(&ls->file_args, path);
-	// if (ret)
-	// 	return (LS_ERR_RETURN_CODE_FATAL);
 	return (ret);
 }
 
@@ -71,7 +66,7 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 					ret = non_option_arg_parse(ls, argv[i]);
 					if (ret)
 					{
-						printf ("Error in argparse: '%s'\n", argv[i]);
+						ls->has_error = 1;
 						continue ;
 					}
 				}
@@ -89,8 +84,9 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 							case 'r': ls->opts |= LS_OPTION_r; break ;
 							case 't': ls->opts |= LS_OPTION_t; break ;
 							default:
-								ls->err.code = LS_ERR_INVALID_OPTION;
-								return (LS_ERR_RETURN_CODE_FATAL);
+								print_error(&flag_str[flag], LS_ERR_INVALID_OPTION);
+								// ls->err.code = LS_ERR_INVALID_OPTION;
+								return (LS_RETURN_CODE_FATAL);
 						}
 					}
 				}
@@ -100,7 +96,8 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 				ret = non_option_arg_parse(ls, argv[i]);
 				if (ret)
 				{
-					printf ("Error in argparse: '%s'\n", argv[i]);
+					// print_error(argv[i], LS_ERR_NO_SUCH_FILE_OR_DIRECTORY);
+					// printf ("Error in argparse: '%s'\n", argv[i]);
 					continue ;
 				}
 		}

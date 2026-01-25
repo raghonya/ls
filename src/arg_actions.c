@@ -19,7 +19,7 @@ int	create_arg(arg_t **data, char *path, char *name)
 	if (!(*data))
 	{
 		write(2, "Malloc error\n", 13);
-		return (LS_ERR_RETURN_CODE_FATAL);
+		return (LS_RETURN_CODE_FATAL);
 	}
 	(*data)->group = NULL;
 	(*data)->lnk_cnt = 0;
@@ -29,7 +29,7 @@ int	create_arg(arg_t **data, char *path, char *name)
 	{
 		write(2, "Malloc error\n", 13);
 		free((*data));
-		return (LS_ERR_RETURN_CODE_FATAL);
+		return (LS_RETURN_CODE_FATAL);
 	}
 	(*data)->name = ft_strdup(name);
 	if (!(*data)->name)
@@ -37,7 +37,7 @@ int	create_arg(arg_t **data, char *path, char *name)
 		write(2, "Malloc error\n", 13);
 		free((*data)->path);
 		free((*data));
-		return (LS_ERR_RETURN_CODE_FATAL);
+		return (LS_RETURN_CODE_FATAL);
 	}
 	(*data)->perm = NULL;
 	(*data)->size = 0;
@@ -59,16 +59,16 @@ int	add_arg(t_list **lst, char *path)
 
 	ret = create_arg(&data, path, path);
 	if (!data)
-		return (LS_ERR_RETURN_CODE_FATAL);
+		return (LS_RETURN_CODE_FATAL);
 	new_node = ft_lstnew(data);
 	if (!new_node)
 	{
 		write(2, "Malloc error\n", 13);
 		free_arg(data);
-		return (LS_ERR_RETURN_CODE_FATAL);
+		return (LS_RETURN_CODE_FATAL);
 	}
 	ft_lstadd_back(lst, new_node);
-	return (LS_ERR_RETURN_CODE_NO_ERROR);
+	return (LS_RETURN_CODE_NO_ERROR);
 }
 
 void	delete_arg(t_list **lst, t_list *node)

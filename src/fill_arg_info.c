@@ -69,7 +69,7 @@ int	fill_arg_info(arg_t *arg)
 	{
 		write (2, "Error stat\n", 11);
 		// write(1, arg->path, ft_strlen(arg->path));
-		return (LS_ERR_RETURN_CODE_FATAL);
+		return (LS_RETURN_CODE_FATAL);
 	}
 	// type
 	arg->type = statbuf.st_mode & __S_IFMT;
@@ -83,14 +83,14 @@ int	fill_arg_info(arg_t *arg)
 	if (!usr_pwd || !grp_pwd)
 	{
 		// 
-		return (LS_ERR_RETURN_CODE_MINOR);
+		return (LS_RETURN_CODE_MINOR);
 	}
 	arg->owner = ft_strdup(usr_pwd->pw_name);
 	arg->group = ft_strdup(grp_pwd->gr_name);
 	if (!arg->owner || !arg->group)
 	{
 		// 
-		return (LS_ERR_RETURN_CODE_MINOR);
+		return (LS_RETURN_CODE_MINOR);
 	}
 
 	// link count
@@ -117,6 +117,6 @@ int	fill_arg_info(arg_t *arg)
 	// printf ("stat mode: %o\n", statbuf.st_mode);
 	// printf ("username: %s\n", getpwuid(statbuf.st_uid)->pw_name);
 	// printf ("groupname: %s\n", getgrgid(statbuf.st_gid)->gr_name);
-	return (LS_ERR_RETURN_CODE_NO_ERROR);
+	return (LS_RETURN_CODE_NO_ERROR);
 
 }
