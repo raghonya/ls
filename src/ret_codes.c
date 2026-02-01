@@ -24,10 +24,10 @@ void	print_error(char *name, int type)
 	ft_putstr_fd("ls: ", 2);
 	switch (type)
 	{
-		case LS_ERR_INVALID_OPTION:
-			print_with_quotes("invalid option -- ", name, 0);
-			ft_putendl_fd ("", 2);
-			break;
+		// case LS_ERR_INVALID_OPTION:
+		// 	print_with_quotes("invalid option -- ", name, 0);
+		// 	ft_putendl_fd ("", 2);
+		// 	break;
 		case LS_ERR_NO_SUCH_FILE_OR_DIRECTORY:
 			print_with_quotes("cannot access ", name, 1);
 			perror("");

@@ -1,6 +1,6 @@
 #include "ls.h"
 
-int	check_arg_access(char *path, t_error *err, int *is_dir)
+int	check_arg_access(char *path, int *is_dir)
 {
 	int			ret;
 	struct stat	sb;
@@ -9,7 +9,9 @@ int	check_arg_access(char *path, t_error *err, int *is_dir)
 	ret = lstat(path, &sb);
 	if (ret != 0)
 	{
-		print_error(path, LS_ERR_NO_SUCH_FILE_OR_DIRECTORY);
+		// print_error(path, LS_ERR_NO_SUCH_FILE_OR_DIRECTORY);
+		ft_strcpy(g_err.name, path);
+		g_err.type = LS_ERR_NO_SUCH_FILE_OR_DIRECTORY;
 		return (LS_RETURN_CODE_FATAL);
 	}
 
@@ -19,12 +21,14 @@ int	check_arg_access(char *path, t_error *err, int *is_dir)
 		dir = opendir(path);
 		if (dir == NULL)
 		{
-			print_error(path, LS_ERR_PERMISSION_DENIED);
+			// print_error(path, LS_ERR_PERMISSION_DENIED);
+			ft_strcpy(g_err.name, path);
+			g_err.type = LS_ERR_PERMISSION_DENIED;
 			return (LS_RETURN_CODE_FATAL);
 		}
 		closedir(dir);
 	}
-	return (LS_ERR_NO_ERROR);
+	return (LS_RETURN_CODE_NO_ERROR);
 }
 
 int		non_option_arg_parse(cmd_t *ls, char *path)
@@ -33,7 +37,7 @@ int		non_option_arg_parse(cmd_t *ls, char *path)
 	DIR		*dir;
 	int		is_dir;
 
-	ret = check_arg_access(path, &ls->err, &is_dir);
+	ret = check_arg_access(path, &is_dir);
 	if (ret)
 		return (ret);
 	if (is_dir)
@@ -66,7 +70,8 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 					ret = non_option_arg_parse(ls, argv[i]);
 					if (ret)
 					{
-						ls->has_error = 1;
+						print_error(g_err.name, g_err.type);
+						ls->arg_error = 1;
 						continue ;
 					}
 				}
@@ -84,8 +89,10 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 							case 'r': ls->opts |= LS_OPTION_r; break ;
 							case 't': ls->opts |= LS_OPTION_t; break ;
 							default:
-								print_error(&flag_str[flag], LS_ERR_INVALID_OPTION);
-								// ls->err.code = LS_ERR_INVALID_OPTION;
+								ft_putstr_fd("ls: invalid option -- '", 2);
+								ft_putchar_fd(flag_str[flag], 2);
+								ft_putstr_fd("'\n", 2);
+								ls->opt_error = 1;
 								return (LS_RETURN_CODE_FATAL);
 						}
 					}
@@ -96,11 +103,14 @@ int	arg_parse(cmd_t *ls, int argc, char **argv)
 				ret = non_option_arg_parse(ls, argv[i]);
 				if (ret)
 				{
-					// print_error(argv[i], LS_ERR_NO_SUCH_FILE_OR_DIRECTORY);
-					// printf ("Error in argparse: '%s'\n", argv[i]);
+					print_error(g_err.name, g_err.type);
+					ls->arg_error = 1;
 					continue ;
 				}
 		}
 	}
-	return (0);
+	// printf ("error: %d\n", ls->arg_error);
+	if (ls->arg_error)
+		return (LS_RETURN_CODE_FATAL);
+	return (LS_RETURN_CODE_NO_ERROR);
 }

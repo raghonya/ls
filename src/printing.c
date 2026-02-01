@@ -1,7 +1,9 @@
 #include "ls.h"
 #include <sys/sysmacros.h>
 
-char **format_time_split(time_t input_time, int is_full_datetime);
+char	**format_time_split(time_t input_time, int is_full_datetime);
+// void	quoting(const char *s, size_t n);
+void	print_filename_quoted(char *s);
 
 void	print_spaces(int current_len, int needed)
 {
@@ -32,7 +34,6 @@ void	print_major_minor(off_t size, t_info_max_lengths *max_lengths)
 
 int		print_link(char *link, size_t size)
 {
-
 	char	*buf;
 	ssize_t	bufsiz;
 	ssize_t	nbytes;
@@ -43,19 +44,23 @@ int		print_link(char *link, size_t size)
 		bufsiz = PATH_MAX;
 
 	buf = malloc(bufsiz);
-	if (buf == NULL) {
-		// perror("malloc");
+	if (buf == NULL)
+	{
+		ft_strcpy(g_err.name, link);
+		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
 		return (LS_RETURN_CODE_FATAL);
 	}
-
 	nbytes = readlink(link, buf, bufsiz);
-	if (nbytes == -1) {
-		// perror("readlink");
+	if (nbytes == -1)
+	{
+		ft_strcpy(g_err.name, link);
+		g_err.type = LS_ERR_UNDEFINED;
 		return (LS_RETURN_CODE_FATAL);
 	}
-
 	write (1, buf, nbytes);
 	free(buf);
+
+	return (LS_RETURN_CODE_NO_ERROR);
 }
 
 int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
@@ -103,7 +108,7 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 		tmp = format_time_split(arg->last_modif, arg->is_full_datetime);
 		if (!tmp)
 		{
-			// 
+			ft_strcpy(g_err.name, arg->path);
 			return (LS_RETURN_CODE_FATAL);
 		}
 		
@@ -117,7 +122,9 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 		ft_free_2d_array(tmp);
 
 		// name
-		write (1, arg->name, ft_strlen(arg->name));
+		// quoting(arg->name, ft_strlen(arg->name));
+		// write (1, arg->name, ft_strlen(arg->name));
+		print_filename_quoted(arg->name);
 		if (arg->type == LINK)
 		{
 			write (1, " -> ", 4);
@@ -127,7 +134,8 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 	}
 	else
 	{
-		write(1, arg->name, ft_strlen(arg->name));
+		print_filename_quoted(arg->name);
+		// write(1, arg->name, ft_strlen(arg->name));
 		if (!(triggers & DIR_LAST_ELEM))
 			write (1, "  ", 2);
 		else
@@ -152,7 +160,7 @@ void	print_total_blocks(t_list *order)
 	write(1, "\n", 1);
 }
 
-int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths)
+int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, int triggers)
 {
 	arg_t	*data;
 	size_t	current_len;
@@ -191,7 +199,10 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths)
 		// day
 		time_split = format_time_split(data->last_modif, data->is_full_datetime);
 		if (!time_split)
-			return (LS_RETURN_CODE_FATAL);
+		{
+			ft_strcpy(g_err.name, data->path);
+			return (_err_code(triggers));
+		}
 		current_len = ft_strlen(time_split[1]);
 		if (current_len > max_lengths->day_len)
 			max_lengths->day_len = current_len;
@@ -209,9 +220,6 @@ int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts
 	{
 		print_total_blocks(order);
 	}
-	// ret = count_arg_info_lengths(order, &max_lengths);
-	// if (ret)
-	// 	return (ret);
 	while (order)
 	{
 		if (order->next == NULL)

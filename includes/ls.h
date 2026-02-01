@@ -32,8 +32,9 @@
 # define SORT_BY_NAME	0
 # define SORT_BY_TIME	1
 
-extern int	g_err_type;
-extern int	g_err_code;
+extern t_error	g_err;
+// extern int	g_err_type;
+// extern int	g_err_code;
 
 typedef enum arg_type_t
 {
@@ -98,7 +99,8 @@ typedef struct cmd_t
 	char				*parent_path;
 	uint16_t			triggers;
 	t_error				err;
-	char				has_error;
+	uint32_t			opt_error;
+	char				arg_error;
 } cmd_t;
 
 // void	err_exit(int condition, char *message, int code);
@@ -122,7 +124,7 @@ int		set_full_datetime_flag(time_t input_time, int *is_full_datetime);
 char	*format_time(time_t input_time, int is_full_datetime);
 
 // Utils
-char	*str_to_lower(char *str);
+// char	*str_to_lower(char *str);
 void	slice_last_chars(char **str, char c);
 char	*create_relative_path(char *path, char *name);
 void	swap_ptrs(void **first, void **second);

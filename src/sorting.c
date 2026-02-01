@@ -16,7 +16,11 @@ static char	*remove_symbols(char *str)
 
 	copy = ft_strdup(str);
 	if (!copy)
+	{
+		ft_strcpy(g_err.name, str);
+		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
 		return (copy);
+	}
 	for (int i = 0; copy[i]; ++i)
 	{
 		if (!ft_isalnum(copy[i]))
@@ -36,8 +40,8 @@ static int	compare_names(t_list *first, t_list *second)
 	char	*tmpc1_removed;
 	char	*tmpc2_removed;
 
-	tmpc1 = str_to_lower(((arg_t *)first->data)->name);
-	tmpc2 = str_to_lower(((arg_t *)second->data)->name);
+	tmpc1 = ft_new_str_tolower(((arg_t *)first->data)->name);
+	tmpc2 = ft_new_str_tolower(((arg_t *)second->data)->name);
 	tmpc1_removed = remove_symbols(tmpc1);
 	tmpc2_removed = remove_symbols(tmpc2);
 	if (ft_strcmp(tmpc1_removed, tmpc2_removed) == 0)

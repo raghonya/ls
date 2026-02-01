@@ -90,6 +90,8 @@ char	**ft_split(char const *s, char c)
 
 	i = 0;
 	wrdcnt = 0;
+	if (!s)
+		return (NULL);
 	while (s[i])
 	{
 		while (s[i] == c)

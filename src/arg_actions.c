@@ -18,7 +18,9 @@ int	create_arg(arg_t **data, char *path, char *name)
 	(*data) = malloc(sizeof(arg_t));
 	if (!(*data))
 	{
-		write(2, "Malloc error\n", 13);
+		ft_strcpy(g_err.name, path);
+		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
+		// write(2, "Malloc error\n", 13);
 		return (LS_RETURN_CODE_FATAL);
 	}
 	(*data)->group = NULL;
@@ -27,14 +29,16 @@ int	create_arg(arg_t **data, char *path, char *name)
 	(*data)->path = ft_strdup(path);
 	if (!(*data)->path)
 	{
-		write(2, "Malloc error\n", 13);
+		ft_strcpy(g_err.name, path);
+		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
 		free((*data));
 		return (LS_RETURN_CODE_FATAL);
 	}
 	(*data)->name = ft_strdup(name);
 	if (!(*data)->name)
 	{
-		write(2, "Malloc error\n", 13);
+		ft_strcpy(g_err.name, path);
+		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
 		free((*data)->path);
 		free((*data));
 		return (LS_RETURN_CODE_FATAL);
@@ -63,7 +67,8 @@ int	add_arg(t_list **lst, char *path)
 	new_node = ft_lstnew(data);
 	if (!new_node)
 	{
-		write(2, "Malloc error\n", 13);
+		ft_strcpy(g_err.name, path);
+		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
 		free_arg(data);
 		return (LS_RETURN_CODE_FATAL);
 	}

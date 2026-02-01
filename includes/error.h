@@ -6,6 +6,8 @@
 # define LS_ERR_NOT_ENOUGH_MEMORY			2
 # define LS_ERR_NO_SUCH_FILE_OR_DIRECTORY	3
 # define LS_ERR_INVALID_OPTION 				4
+# define LS_ERR_TIME_PARSE_ERROR			5
+# define LS_ERR_UNDEFINED	 				6
 
 typedef enum ret_code
 {
@@ -25,7 +27,7 @@ typedef enum ret_code
 
 typedef struct s_error
 {
-	char		*message;
+	char		name[256];
 	ret_code	code;
 	int			type;
 } t_error;

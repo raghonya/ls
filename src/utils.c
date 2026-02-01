@@ -33,20 +33,6 @@ void	err_exit(int condition, char *message, int code)
 	}
 }
 
-char *str_to_lower(char *str)
-{
-	int 	i;
-	char	*low_str;
-
-	low_str = malloc(sizeof(char) * (ft_strlen(str) + 1));
-	if (!low_str)
-		return (NULL);
-	for (i = 0; str[i]; ++i)
-		low_str[i] = ft_tolower(str[i]);
-	low_str[i] = 0;
-	return (low_str);
-}
-
 void	swap_ptrs(void **first, void **second)
 {
 	void	*tmp;

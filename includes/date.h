@@ -1,10 +1,10 @@
 #ifndef DATE_H
 # define DATE_H
 
-# define YEAR_WEIGHT	(24*60*30*12)
-# define MONTH_WEIGHT	(24*60*30)
+// # define YEAR_WEIGHT	(12*30*24*60)
+// # define MONTH_WEIGHT	(30*24*60)
 # define DAY_WEIGHT		(24*60)
-# define HOUR_WEIGHT	(24)
+# define HOUR_WEIGHT	(60)
 # define MIN_WEIGHT		(1)
 
 # define JAN 1
@@ -20,6 +20,19 @@
 # define NOV 11
 # define DEC 12
 
+# define JAN_DAYS 31
+# define FEB_DAYS(year) ((year % 4 == 0 ? 29 : 28))
+# define MAR_DAYS 31
+# define APR_DAYS 30
+# define MAY_DAYS 31
+# define JUN_DAYS 30
+# define JUL_DAYS 31
+# define AUG_DAYS 31
+# define SEP_DAYS 30
+# define OCT_DAYS 31
+# define NOV_DAYS 30
+# define DEC_DAYS 31
+
 # include <stdint.h>
 # include <stdlib.h>
 # include <time.h>
@@ -27,11 +40,12 @@
 
 typedef struct s_my_time
 {
-	uint64_t		year;
-	uint64_t		month;
-	uint64_t		day;
-	uint64_t		hour;
-	uint64_t		min;
+	uint16_t	year;
+	uint16_t	month;
+	uint16_t	day;
+	uint16_t	hour;
+	uint16_t	min;
+	uint16_t	days_in_month;
 } t_my_time;
 
 #endif

@@ -1,16 +1,14 @@
 #include "ls.h"
 
-int	create_last_modif_time(time_t mod_time, arg_t *obj)
-{
-	int		ret;
+// int	create_last_modif_time(time_t mod_time, arg_t *obj)
+// {
+// 	int		ret;
 
-	ret = set_full_datetime_flag(mod_time, &obj->is_full_datetime);
-	if (ret)
-		return (ret);
-	
-
-	return (mod_time);
-}
+// 	ret = set_full_datetime_flag(mod_time, &obj->is_full_datetime);
+// 	if (ret)
+// 		return (ret);
+// 	return (mod_time);
+// }
 
 char *calculate_permissions(mode_t mode)
 {
@@ -20,7 +18,10 @@ char *calculate_permissions(mode_t mode)
 
 	mode_str = ft_strdup("rwxrwxrwx");
 	if (!mode_str)
+	{
+		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
 		return (NULL);
+	}
 	obj_perms = mode & 0777;
 	len = ft_strlen(mode_str);
 	for (int i = 0; i < len; ++i)
@@ -36,7 +37,10 @@ char	*check_permissions(mode_t mode)
 	
 	permissions = ft_strdup("-rwxrwxrwx");
 	if (!permissions)
+	{
+		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
 		return (NULL);
+	}
 	switch (mode & __S_IFMT)
 	{
 		case FILETYPE:	permissions[0] = '-'; break ;
@@ -50,7 +54,10 @@ char	*check_permissions(mode_t mode)
 	}
 	tmp = calculate_permissions(mode);
 	if (!tmp)
+	{
+		free(permissions);
 		return (NULL);
+	}
 	ft_memcpy(permissions + 1, tmp, ft_strlen(tmp));
 	free(tmp);
 
@@ -67,8 +74,8 @@ int	fill_arg_info(arg_t *arg)
 
 	if (lstat(arg->path, &statbuf) != 0)
 	{
-		write (2, "Error stat\n", 11);
-		// write(1, arg->path, ft_strlen(arg->path));
+		ft_strcpy(g_err.name, arg->path);
+		g_err.type = LS_ERR_NO_SUCH_FILE_OR_DIRECTORY;
 		return (LS_RETURN_CODE_FATAL);
 	}
 	// type
@@ -76,20 +83,26 @@ int	fill_arg_info(arg_t *arg)
 
 	// permissions
 	arg->perm = check_permissions(statbuf.st_mode);
-
+	if (arg->perm == NULL)
+	{
+		ft_strcpy(g_err.name, arg->path);
+		return (LS_RETURN_CODE_FATAL);
+	}
 	// user and group
 	usr_pwd = getpwuid(statbuf.st_uid);
 	grp_pwd = getgrgid(statbuf.st_gid);
 	if (!usr_pwd || !grp_pwd)
 	{
-		// 
+		ft_strcpy(g_err.name, arg->path);
+		g_err.type = LS_ERR_UNDEFINED;
 		return (LS_RETURN_CODE_MINOR);
 	}
 	arg->owner = ft_strdup(usr_pwd->pw_name);
 	arg->group = ft_strdup(grp_pwd->gr_name);
 	if (!arg->owner || !arg->group)
 	{
-		// 
+		ft_strcpy(g_err.name, arg->path);
+		g_err.type = LS_ERR_UNDEFINED;
 		return (LS_RETURN_CODE_MINOR);
 	}
 
@@ -105,18 +118,13 @@ int	fill_arg_info(arg_t *arg)
 	// time
 	// arg->last_modif = statbuf.st_mtime;
 	arg->last_modif = statbuf.st_mtime;
-	ret = set_full_datetime_flag(statbuf.st_mtime, &arg->is_full_datetime);
-	if (ret)
+	// printf ("%s\n", arg->name);
+	if (set_full_datetime_flag(statbuf.st_mtime, &arg->is_full_datetime))
 	{
-		// 
-		return (ret);
+		ft_strcpy(g_err.name, arg->path);
+		// g_err.type = LS_ERR_TIME_PARSE_ERROR;
+		return (LS_RETURN_CODE_FATAL);
 	}
-	// printf ("filling info for: %s\n", arg->path);
-	// printf ("stat size: %ld\n", statbuf.st_size);
-	// printf ("stat blocks: %ld\n", statbuf.st_blocks);
-	// printf ("stat mode: %o\n", statbuf.st_mode);
-	// printf ("username: %s\n", getpwuid(statbuf.st_uid)->pw_name);
-	// printf ("groupname: %s\n", getgrgid(statbuf.st_gid)->gr_name);
 	return (LS_RETURN_CODE_NO_ERROR);
 
 }
