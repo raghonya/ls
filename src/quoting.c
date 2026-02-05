@@ -23,7 +23,7 @@ static void	put_control_char(char c)
 	ft_putchar_fd('\'', 1);
 }
 
-void	print_filename_quoted(char *s, int needs_padding)
+void	print_filename_quoted(char *s)
 {
 	int	i;
 	int	quote_type = 0; // 0: none, 1: single, 2: double, 3: control
@@ -42,8 +42,8 @@ void	print_filename_quoted(char *s, int needs_padding)
 		quote_type = 3;
 
 	// Alignment: If the name isn't quoted, add a space to match the opening '
-	if (quote_type == 0 && needs_padding)
-		ft_putchar_fd(' ', 1);
+	// if (quote_type == 0 && needs_padding)
+	// 	ft_putchar_fd(' ', 1);
 
 	if (quote_type == 0)
 		ft_putstr_fd(s, 1);

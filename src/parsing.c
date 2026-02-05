@@ -1,13 +1,13 @@
 #include "ls.h"
 
-int	check_arg_access(char *path, int *is_dir)
+int	check_arg_access(char *path, int *is_dir, uint32_t opts)
 {
 	int			ret;
 	struct stat	sb;
 	DIR			*dir;
 
 	ret = lstat(path, &sb);
-	if (ret != 0)
+	if (ret)
 	{
 		// print_error(path, LS_ERR_NO_SUCH_FILE_OR_DIRECTORY);
 		ft_strcpy(g_err.name, path);
@@ -16,6 +16,15 @@ int	check_arg_access(char *path, int *is_dir)
 	}
 
 	*is_dir = ((sb.st_mode & __S_IFMT) == __S_IFDIR);
+	if ((sb.st_mode & __S_IFMT) == __S_IFLNK \
+	&& !(opts & LS_OPTION_l))
+	{
+		dir = opendir(path);
+		if (dir == NULL)
+			return (0);
+		closedir(dir);
+		*is_dir = 1;
+	}
 	if (*is_dir)
 	{
 		dir = opendir(path);
@@ -37,7 +46,7 @@ int		non_option_arg_parse(cmd_t *ls, char *path)
 	DIR		*dir;
 	int		is_dir;
 
-	ret = check_arg_access(path, &is_dir);
+	ret = check_arg_access(path, &is_dir, ls->opts);
 	if (ret)
 		return (ret);
 	if (is_dir)

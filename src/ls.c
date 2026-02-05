@@ -249,7 +249,7 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers)
 		{
 			tmp = tmp->next;
 			g_err.code = LS_RETURN_CODE_MINOR;
-			print_error(tmp_str, g_err.type);
+			print_error(g_err.name, g_err.type);
 			continue ;
 		}
 		tmp = tmp->next;
@@ -257,7 +257,7 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers)
 	free(tmp_str);
 	ft_lstclear(&order, &free_arg);
 	ft_lstclear(&subdirs, &free_arg);
-
+	
 	if (triggers & RECURSION_FUNC)
 		return (LS_RETURN_CODE_NO_ERROR);
 	return (g_err.code);
@@ -354,9 +354,9 @@ int		main(int argc, char **argv)
 		if (ret)
 		{
 			if (ret > error)
-				error = ret;
+			error = ret;
 			if (!(ls->opts & LS_OPTION_R))
-				print_error(g_err.name, g_err.type);
+			print_error(g_err.name, g_err.type);
 			continue ;
 		}
 	}

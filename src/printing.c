@@ -63,12 +63,35 @@ int		print_link(char *link, size_t size)
 	return (LS_RETURN_CODE_NO_ERROR);
 }
 
+int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers);
+
+int		check_link(arg_t *arg, uint32_t opts, int triggers)
+{
+	// struct stat	sb;
+	// int			ret;
+
+	// if (stat(arg->path, &sb) == -1)
+	// {
+	// 	ft_strcpy(g_err.name, arg->path);
+	// 	g_err.type = LS_ERR_PERMISSION_DENIED;
+	// 	return (LS_RETURN_CODE_FATAL);
+	// }
+	// ret = show_contents(NULL, opts, 0);
+	// ret = open_dir(arg, arg->path, opts, triggers);
+	// if (ret)
+	// 	return (ret);
+
+	// return (LS_RETURN_CODE_NO_ERROR);
+}
+
 int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
 {
 	char	**tmp;
+	int		ret;
 
 	if (!(triggers & DONT_CHECK_OPT_a) && !(LS_OPTION_a & opts) && arg->name[0] == '.')
 		return (0);
+	// printf ("bany ban %s\n", arg->name);
 	if (LS_OPTION_l & opts)
 	{
 		// type and permissions
@@ -127,6 +150,9 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 		print_filename_quoted(arg->name);
 		if (arg->type == LINK)
 		{
+			// if (arg->type == LINK && )
+			// ret = check_link(arg->path, opts);
+			// if (ret) return (ret);
 			write (1, " -> ", 4);
 			print_link(arg->path, arg->size);
 		}
@@ -134,13 +160,18 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 	}
 	else
 	{
-		print_filename_quoted(arg->name);
-		// write(1, arg->name, ft_strlen(arg->name));
+		// ret = check_link(arg, opts, triggers);
+		// if (ret) return (ret);
+		
+		// print_filename_quoted(arg->name);
+		write(1, arg->name, ft_strlen(arg->name));
+		// printf ("%d\n",write(1, arg->name, ft_strlen(arg->name)));
 		if (!(triggers & DIR_LAST_ELEM))
 			write (1, "  ", 2);
 		else
 			write (1, "\n", 1);
 	}
+		// printf("smth\n");
 
 	return (LS_RETURN_CODE_NO_ERROR);
 }
@@ -220,6 +251,7 @@ int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts
 	{
 		print_total_blocks(order);
 	}
+	// print(order);
 	while (order)
 	{
 		if (order->next == NULL)
