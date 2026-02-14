@@ -13,6 +13,7 @@
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <stdint.h>
+# include <stdbool.h>
 
 # include "libft.h"
 # include "error.h"
@@ -104,7 +105,7 @@ typedef struct cmd_t
 } cmd_t;
 
 // void	err_exit(int condition, char *message, int code);
-int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers);
+void	print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers);
 
 // Argument related functions
 int		create_arg(arg_t **data, char *path, char *name);
@@ -132,6 +133,7 @@ void	print(t_list *lst);
 // void	err_type_check(t_error err);
 int		_err_code(int trigger);
 void	print_error(char *name, int type);
+bool	is_safe(unsigned char c);
 
 // Tmp
 void	print_all_info(arg_t *elem);

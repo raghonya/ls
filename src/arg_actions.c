@@ -63,7 +63,7 @@ int	add_arg(t_list **lst, char *path)
 
 	ret = create_arg(&data, path, path);
 	if (!data)
-		return (LS_RETURN_CODE_FATAL);
+		return (ret);
 	new_node = ft_lstnew(data);
 	if (!new_node)
 	{

@@ -1,81 +1,96 @@
 #include "ls.h"
+#include <stdbool.h>
 
-static int	is_safe(char c)
+bool	is_safe(unsigned char c)
 {
 	if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
-		return (1);
-	if (c == '+' || c == ',' || c == '-' || c == '.' || c == '_' || c == '/')
-		return (1);
-	return (0);
+		return true;
+	return (c == '.' || c == '_' || c == '-' || c == '/');
 }
 
-static void	put_control_char(char c)
+static void put_octal(unsigned char c)
 {
-	ft_putstr_fd("$'", 1);
-	if (c == '\r')
-		ft_putstr_fd("\\r", 1);
-	else if (c == '\f')
-		ft_putstr_fd("\\f", 1);
-	else if (c == '\n')
-		ft_putstr_fd("\\n", 1);
-	else if (c == '\t')
-		ft_putstr_fd("\\t", 1);
-	ft_putchar_fd('\'', 1);
+	ft_putstr_fd("\\", STDOUT_FILENO);
+	ft_putchar_fd(((c >> 6) & 7) + '0', STDOUT_FILENO);
+	ft_putchar_fd(((c >> 3) & 7) + '0', STDOUT_FILENO);
+	ft_putchar_fd((c & 7) + '0', STDOUT_FILENO);
 }
 
-void	print_filename_quoted(char *s)
+static void handle_ctrl_chars(const char *name, int *i)
 {
-	int	i;
-	int	quote_type = 0; // 0: none, 1: single, 2: double, 3: control
-	int	has_cntrl = 0;
-
-	for (i = 0; s[i]; i++)
+	ft_putstr_fd("'$'", STDOUT_FILENO);
+	while (name[*i] && ((unsigned char)name[*i] < 32 || (unsigned char)name[*i] >= 127))
 	{
-		if (s[i] < 32 || s[i] >= 127)
-			has_cntrl = 1;
-		else if (!is_safe(s[i]) && quote_type == 0)
-			quote_type = 1;
-		if (s[i] == '\'')
-			quote_type = 2;
+		unsigned char c = (unsigned char)name[*i];
+		if (c == '\r')		ft_putstr_fd("\\r", STDOUT_FILENO);
+		else if (c == '\n') ft_putstr_fd("\\n", STDOUT_FILENO);
+		else if (c == '\f') ft_putstr_fd("\\f", STDOUT_FILENO);
+		else if (c == '\t') ft_putstr_fd("\\t", STDOUT_FILENO);
+		else if (c == '\v') ft_putstr_fd("\\v", STDOUT_FILENO);
+		else				put_octal(c);
+		(*i)++;
 	}
-	if (has_cntrl)
-		quote_type = 3;
+	ft_putstr_fd("''", STDOUT_FILENO);
+}
 
-	// Alignment: If the name isn't quoted, add a space to match the opening '
-	// if (quote_type == 0 && needs_padding)
-	// 	ft_putchar_fd(' ', 1);
+void print_filename_quoted(const char *name, uint16_t triggers)
+{
+	bool has_ctrl = false;
+	bool has_unsafe = false;
+	bool has_squote = false;
 
-	if (quote_type == 0)
-		ft_putstr_fd(s, 1);
-	else if (quote_type == 3)
+	for (int i = 0; name[i]; i++)
 	{
-		ft_putstr_fd("''", 1);
-		for (i = 0; s[i]; i++)
+		unsigned char c = (unsigned char)name[i];
+		if (c < 32 || c >= 127)
+			has_ctrl = has_unsafe = true;
+		else if (!is_safe(c))
+			has_unsafe = true;	
+		if (c == '\'')
+			has_squote = true;
+	}
+
+	if (!has_unsafe)
+	{
+		if (triggers & SPACE_BEFORE_NAME)
+			ft_putchar_fd(' ', STDOUT_FILENO);
+		ft_putstr_fd((char *)name, STDOUT_FILENO);
+		return;
+	}
+
+	if (has_ctrl) {
+		ft_putchar_fd('\'', STDOUT_FILENO);
+		for (int i = 0; name[i]; )
 		{
-			if (s[i] < 32 || s[i] >= 127)
-				put_control_char(s[i]);
+			if ((unsigned char)name[i] < 32 || (unsigned char)name[i] >= 127)
+				handle_ctrl_chars(name, &i);
 			else
 			{
-				// If text follows a control char, ls wraps it in single quotes
-				ft_putchar_fd('\'', 1);
-				while (s[i] && (s[i] >= 32 && s[i] < 127))
-					ft_putchar_fd(s[i++], 1);
-				ft_putchar_fd('\'', 1);
-				if (!s[i]) break;
-				i--;
+				if (name[i] == '\'')
+					ft_putstr_fd("'\\''", STDOUT_FILENO);
+				else
+					ft_putchar_fd(name[i], STDOUT_FILENO);
+				i++;
 			}
 		}
+		ft_putchar_fd('\'', STDOUT_FILENO);
 	}
-	else if (quote_type == 2)
+	else if (has_squote && !ft_strchr(name, '"'))
 	{
-		ft_putchar_fd('"', 1);
-		ft_putstr_fd(s, 1);
-		ft_putchar_fd('"', 1);
+		ft_putchar_fd('"', STDOUT_FILENO);
+		ft_putstr_fd((char *)name, STDOUT_FILENO);
+		ft_putchar_fd('"', STDOUT_FILENO);
 	}
-	else // quote_type == 1
+	else
 	{
-		ft_putchar_fd('\'', 1);
-		ft_putstr_fd(s, 1);
-		ft_putchar_fd('\'', 1);
+		ft_putchar_fd('\'', STDOUT_FILENO);
+		for (int i = 0; name[i]; i++)
+		{
+			if (name[i] == '\'')
+				ft_putstr_fd("'\\''", STDOUT_FILENO);
+			else
+				ft_putchar_fd(name[i], STDOUT_FILENO);
+		}
+		ft_putchar_fd('\'', STDOUT_FILENO);
 	}
 }

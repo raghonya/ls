@@ -5,6 +5,7 @@ TODO
 symbols_test/
 atest/
 obj/
+.vscode
 
 # Prerequisites
 *.d

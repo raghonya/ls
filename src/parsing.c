@@ -43,7 +43,6 @@ int	check_arg_access(char *path, int *is_dir, uint32_t opts)
 int		non_option_arg_parse(cmd_t *ls, char *path)
 {
 	int		ret;
-	DIR		*dir;
 	int		is_dir;
 
 	ret = check_arg_access(path, &is_dir, ls->opts);

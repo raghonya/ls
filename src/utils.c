@@ -13,14 +13,14 @@ void	print(t_list *lst)
 void	print_all_info(arg_t *elem)
 {
 	printf ("perms: %s\n", elem->perm);
-	printf ("links: %d\n", elem->lnk_cnt);
+	printf ("links: %ld\n", elem->lnk_cnt);
 	printf ("owner: %s\n", elem->owner);
 	printf ("group: %s\n", elem->group);
-	printf ("size: %d\n", elem->size);
-	printf ("time: %d\n", (uintmax_t)elem->last_modif);
+	printf ("size: %ld\n", elem->size);
+	printf ("time: %ld\n", (uintmax_t)elem->last_modif);
 	printf ("path: %s\n", elem->path);
 	printf ("name: %s\n", elem->name);
-	printf ("blocks: %d\n", elem->blocks);
+	printf ("blocks: %ld\n", elem->blocks);
 }
 
 void	err_exit(int condition, char *message, int code)

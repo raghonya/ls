@@ -22,19 +22,15 @@
 */
 
 t_error		g_err = { "", LS_RETURN_CODE_NO_ERROR, 0 };
-// g_err. = LS_RETURN_CODE_NO_ERROR;
-// int		g_err_type = 0;
-// int		g_err_code = 0;
 
 int		show_contents(t_list *node, uint32_t opts, int print_dir_name);
-int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, int triggers);
+int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, uint16_t *triggers);
 
 int		check_recursion(t_list *order, t_list **subdirs)
 {
 	int		ret;
 	arg_t	*data;
 	arg_t	*tmp_arg;
-	t_list	*tmp_lst;
 
 	ret = LS_RETURN_CODE_NO_ERROR;
 	while (order)
@@ -83,13 +79,13 @@ int		check_dir_contents(t_list **order, t_list **subdirs, char *path, uint32_t o
 	}
 	if (triggers & PRINT_DIR_NAME)
 	{
+		write(1, "\n", 1);
 		write(1, path, ft_strlen(path));
 		write(1, ":\n", 2);
 	}
 	slice_last_chars(&path, '/');
 	elem = readdir(dir);
 	while (elem != NULL)
-	// for (elem = readdir(dir); elem != NULL; elem = readdir(dir))
 	{
 		if (!(LS_OPTION_a & opts) && elem->d_name[0] == '.')
 		{
@@ -181,7 +177,7 @@ int		check_dir_contents(t_list **order, t_list **subdirs, char *path, uint32_t o
 // 	return (LS_RETURN_CODE_NO_ERROR);
 // }
 
-int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers)
+int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, uint16_t triggers)
 {
 	int					ret;
 	char				*tmp_str;
@@ -206,7 +202,7 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers)
 		return (_err_code(triggers));
 	}
 	ft_bzero(&local_max_lengths, sizeof(t_info_max_lengths));
-	ret = count_arg_info_lengths(order, &local_max_lengths, triggers);
+	ret = count_arg_info_lengths(order, &local_max_lengths, &triggers);
 	if (ret)
 	{
 		free(tmp_str);
@@ -229,7 +225,6 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers)
 					ft_lstclear(&subdirs, &free_arg);
 					ft_strcpy(g_err.name, arg->path);
 					g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
-					// print_error(arg->path, LS_ERR_NOT_ENOUGH_MEMORY);
 					return (_err_code(triggers));
 				}
 			}
@@ -338,7 +333,7 @@ int		main(int argc, char **argv)
 		ls->triggers |= PRINT_DIR_NAME;
 	sort_with_opts(&ls->dir_args, ls->opts);
 	sort_with_opts(&ls->file_args, ls->opts);
-	ret = count_arg_info_lengths(ls->file_args, &max_lengths, ls->triggers);
+	ret = count_arg_info_lengths(ls->file_args, &max_lengths, &ls->triggers);
 	if (ret)
 	{
 		print_error(g_err.name, g_err.type);
@@ -346,17 +341,17 @@ int		main(int argc, char **argv)
 	}
 	if (ls->file_args)
 		print_ordered(ls->file_args, &max_lengths, ls->opts, ls->triggers | DONT_CHECK_OPT_a | DONT_PRINT_TOTAL);
+	ls->triggers &= ~SPACE_BEFORE_NAME;
 	for (tmp_lst = ls->dir_args; tmp_lst != NULL; tmp_lst = tmp_lst->next)
 	{
 		ls->parent_path = ((arg_t *)tmp_lst->data)->path;
-		// error = ret;
 		ret = show_contents(tmp_lst, ls->opts, ls->triggers);
 		if (ret)
 		{
 			if (ret > error)
-			error = ret;
+				error = ret;
 			if (!(ls->opts & LS_OPTION_R))
-			print_error(g_err.name, g_err.type);
+				print_error(g_err.name, g_err.type);
 			continue ;
 		}
 	}

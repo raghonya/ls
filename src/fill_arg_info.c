@@ -24,7 +24,7 @@ char *calculate_permissions(mode_t mode)
 	}
 	obj_perms = mode & 0777;
 	len = ft_strlen(mode_str);
-	for (int i = 0; i < len; ++i)
+	for (size_t i = 0; i < len; ++i)
 		if (!(obj_perms & (1 << i)))
 			mode_str[len - i - 1] = '-';
 	return (mode_str);
@@ -66,8 +66,7 @@ char	*check_permissions(mode_t mode)
 
 int	fill_arg_info(arg_t *arg)
 {
-	int				ret;
-	char			*tmp;
+	// int				ret;
 	struct stat		statbuf;
 	struct passwd	*usr_pwd;
 	struct group	*grp_pwd;

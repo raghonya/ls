@@ -33,7 +33,7 @@ static char	*remove_symbols(char *str)
 	return (copy);
 }
 
-static int	compare_names(t_list *first, t_list *second)
+static void	compare_names(t_list *first, t_list *second)
 {
 	char	*tmpc1;
 	char	*tmpc2;

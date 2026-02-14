@@ -3,7 +3,7 @@
 
 char	**format_time_split(time_t input_time, int is_full_datetime);
 // void	quoting(const char *s, size_t n);
-void	print_filename_quoted(char *s);
+void	print_filename_quoted(char *s, uint16_t triggers);
 
 void	print_spaces(int current_len, int needed)
 {
@@ -63,31 +63,10 @@ int		print_link(char *link, size_t size)
 	return (LS_RETURN_CODE_NO_ERROR);
 }
 
-int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, int triggers);
-
-int		check_link(arg_t *arg, uint32_t opts, int triggers)
-{
-	// struct stat	sb;
-	// int			ret;
-
-	// if (stat(arg->path, &sb) == -1)
-	// {
-	// 	ft_strcpy(g_err.name, arg->path);
-	// 	g_err.type = LS_ERR_PERMISSION_DENIED;
-	// 	return (LS_RETURN_CODE_FATAL);
-	// }
-	// ret = show_contents(NULL, opts, 0);
-	// ret = open_dir(arg, arg->path, opts, triggers);
-	// if (ret)
-	// 	return (ret);
-
-	// return (LS_RETURN_CODE_NO_ERROR);
-}
-
 int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
 {
 	char	**tmp;
-	int		ret;
+	// int		ret;
 
 	if (!(triggers & DONT_CHECK_OPT_a) && !(LS_OPTION_a & opts) && arg->name[0] == '.')
 		return (0);
@@ -147,7 +126,7 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 		// name
 		// quoting(arg->name, ft_strlen(arg->name));
 		// write (1, arg->name, ft_strlen(arg->name));
-		print_filename_quoted(arg->name);
+		print_filename_quoted(arg->name, triggers);
 		if (arg->type == LINK)
 		{
 			// if (arg->type == LINK && )
@@ -156,15 +135,14 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 			write (1, " -> ", 4);
 			print_link(arg->path, arg->size);
 		}
-		write (1, "\n", 1);
+		// printf("lastarg: %d", triggers & LAST_ARG);
+		if (!(triggers & DIR_LAST_ELEM) || (triggers & LAST_ARG))
+			write (1, "\n", 1);
 	}
 	else
 	{
-		// ret = check_link(arg, opts, triggers);
-		// if (ret) return (ret);
-		
-		// print_filename_quoted(arg->name);
-		write(1, arg->name, ft_strlen(arg->name));
+		print_filename_quoted(arg->name, triggers);
+		// write(1, arg->name, ft_strlen(arg->name));
 		// printf ("%d\n",write(1, arg->name, ft_strlen(arg->name)));
 		if (!(triggers & DIR_LAST_ELEM))
 			write (1, "  ", 2);
@@ -191,7 +169,19 @@ void	print_total_blocks(t_list *order)
 	write(1, "\n", 1);
 }
 
-int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, int triggers)
+void	check_name(char *name, uint16_t *triggers)
+{
+	if (*triggers & SPACE_BEFORE_NAME)
+		return ;
+	for (int i = 0; name[i]; i++)
+	{
+		unsigned char c = (unsigned char)name[i];
+		if (c < 32 || c >= 127 || !is_safe(c))
+			*triggers |= SPACE_BEFORE_NAME;
+	}
+}
+
+int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, uint16_t *triggers)
 {
 	arg_t	*data;
 	size_t	current_len;
@@ -199,6 +189,7 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, int 
 
 	while (order)
 	{
+		check_name(((arg_t *)order->data)->name, triggers);
 		data = order->data;
 		// link count
 		current_len = ft_numlen(data->lnk_cnt);
@@ -232,7 +223,7 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, int 
 		if (!time_split)
 		{
 			ft_strcpy(g_err.name, data->path);
-			return (_err_code(triggers));
+			return (_err_code(*triggers));
 		}
 		current_len = ft_strlen(time_split[1]);
 		if (current_len > max_lengths->day_len)
@@ -243,15 +234,10 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, int 
 	return (LS_RETURN_CODE_NO_ERROR);
 }
 
-int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
+void	print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
 {
-	int		ret;
-
 	if ((LS_OPTION_l & opts) && !(triggers & DONT_PRINT_TOTAL))
-	{
 		print_total_blocks(order);
-	}
-	// print(order);
 	while (order)
 	{
 		if (order->next == NULL)
@@ -260,5 +246,8 @@ int		print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts
 		order = order->next;
 	}
 	if ((triggers & PRINT_DIR_NAME) && !(triggers & LAST_ARG))
+	{
+		// write (1, "444hey444", 9);
 		write (1, "\n", 1);
+	}
 }

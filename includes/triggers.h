@@ -8,5 +8,6 @@
 # define DONT_CHECK_OPT_a	(1 << 4)
 # define DONT_PRINT_TOTAL	(1 << 5)
 # define RECURSION_FUNC		(1 << 6)
+# define SPACE_BEFORE_NAME	(1 << 7)
 
 #endif
