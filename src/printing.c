@@ -135,7 +135,6 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 			write (1, " -> ", 4);
 			print_link(arg->path, arg->size);
 		}
-		// printf("lastarg: %d", triggers & LAST_ARG);
 		if (!(triggers & DIR_LAST_ELEM) || (triggers & LAST_ARG))
 			write (1, "\n", 1);
 	}

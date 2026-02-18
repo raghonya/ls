@@ -267,8 +267,7 @@ int		show_contents(t_list *node, uint32_t opts, int triggers)
 			triggers |= LAST_ARG_RECURSION;
 	}
 
-	int ret = open_dir(node->data, ((arg_t *)node->data)->path, opts, triggers);
-	return (ret);
+	return (open_dir(node->data, ((arg_t *)node->data)->path, opts, triggers));
 }
 
 int		initialize_cmd(cmd_t **ls)
@@ -350,7 +349,8 @@ int		main(int argc, char **argv)
 		{
 			if (ret > error)
 				error = ret;
-			if (!(ls->opts & LS_OPTION_R))
+			if (ret != 1)
+			// if (!(ls->opts & LS_OPTION_R))
 				print_error(g_err.name, g_err.type);
 			continue ;
 		}

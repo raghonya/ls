@@ -25,18 +25,18 @@ int	check_arg_access(char *path, int *is_dir, uint32_t opts)
 		closedir(dir);
 		*is_dir = 1;
 	}
-	if (*is_dir)
-	{
-		dir = opendir(path);
-		if (dir == NULL)
-		{
-			// print_error(path, LS_ERR_PERMISSION_DENIED);
-			ft_strcpy(g_err.name, path);
-			g_err.type = LS_ERR_PERMISSION_DENIED;
-			return (LS_RETURN_CODE_FATAL);
-		}
-		closedir(dir);
-	}
+	// if (*is_dir)
+	// {
+	// 	dir = opendir(path);
+	// 	if (dir == NULL)
+	// 	{
+	// 		// print_error(path, LS_ERR_PERMISSION_DENIED);
+	// 		ft_strcpy(g_err.name, path);
+	// 		g_err.type = LS_ERR_PERMISSION_DENIED;
+	// 		return (LS_RETURN_CODE_FATAL);
+	// 	}
+	// 	closedir(dir);
+	// }
 	return (LS_RETURN_CODE_NO_ERROR);
 }
 
