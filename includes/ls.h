@@ -57,6 +57,7 @@ typedef struct t_info_max_lengths
 	size_t	minor_len;
 	size_t	size_len;
 	size_t	day_len;
+	size_t	year_hour_len;
 } t_info_max_lengths;
 
 // typedef struct arg_t

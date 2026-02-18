@@ -23,7 +23,7 @@
 
 t_error		g_err = { "", LS_RETURN_CODE_NO_ERROR, 0 };
 
-int		show_contents(t_list *node, uint32_t opts, int print_dir_name);
+int		show_contents(t_list *node, uint32_t opts, int triggers, int *has_file_args);
 int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, uint16_t *triggers);
 
 int		check_recursion(t_list *order, t_list **subdirs)
@@ -60,7 +60,7 @@ int		check_recursion(t_list *order, t_list **subdirs)
 	return (ret);
 }
 
-int		check_dir_contents(t_list **order, t_list **subdirs, char *path, uint32_t opts, int triggers)
+int		check_dir_contents(t_list **order, t_list **subdirs, char *path, uint32_t opts, int triggers, int *has_file_args)
 {
 	int				ret;
 	DIR				*dir;
@@ -79,9 +79,18 @@ int		check_dir_contents(t_list **order, t_list **subdirs, char *path, uint32_t o
 	}
 	if (triggers & PRINT_DIR_NAME)
 	{
-		write(1, "\n", 1);
-		write(1, path, ft_strlen(path));
-		write(1, ":\n", 2);
+		if (*has_file_args)
+		{
+			write(1, "\n", 1);
+			write(1, path, ft_strlen(path));
+			write(1, ":\n", 2);
+		}
+		else
+		{
+			write(1, path, ft_strlen(path));
+			write(1, ":\n", 2);
+			*has_file_args = 1;
+		}
 	}
 	slice_last_chars(&path, '/');
 	elem = readdir(dir);
@@ -141,43 +150,7 @@ int		check_dir_contents(t_list **order, t_list **subdirs, char *path, uint32_t o
 	return (LS_RETURN_CODE_NO_ERROR);
 }
 
-// int		check_last_dir_recursive(t_list *subdirs, char *path, char *last_dir, int *triggers)
-// {
-// 	char *tmp_str;
-// 	char *tmp_str_ptr;
-	
-// 	tmp_str = ft_strdup(path);
-// 	if (!tmp_str)
-// 	{
-// 		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
-// 		return (_err_code(*triggers));
-// 	}
-// 	tmp_str_ptr = tmp_str;
-// 	if (*triggers & LAST_ARG_RECURSION)
-// 	{
-// 		if (subdirs)
-// 		{
-// 			if (path && ft_strcmp(path, last_dir) == 0)
-// 			{
-// 				*triggers &= ~LAST_ARG;
-// 				free(tmp_str);
-// 				tmp_str = create_relative_path(last_dir, ((arg_t *)ft_lstlast(subdirs)->data)->name);
-// 				if (!tmp_str)
-// 					return (LS_RETURN_CODE_FATAL);
-// 			}
-// 		}
-// 		else
-// 		{
-// 			// printf ("argpath inside: %s\n", path);
-// 			if (ft_strcmp(path, last_dir) == 0)
-// 				*triggers |= LAST_ARG;
-// 		}
-// 	}
-
-// 	return (LS_RETURN_CODE_NO_ERROR);
-// }
-
-int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, uint16_t triggers)
+int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, uint16_t triggers, int *has_file_args)
 {
 	int					ret;
 	char				*tmp_str;
@@ -195,7 +168,7 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, uint16_t triggers)
 		g_err.type = LS_ERR_NOT_ENOUGH_MEMORY;
 		return (_err_code(triggers));
 	}
-	ret = check_dir_contents(&order, &subdirs, arg->path, opts, triggers);
+	ret = check_dir_contents(&order, &subdirs, arg->path, opts, triggers, has_file_args);
 	if (ret)
 	{
 		free(tmp_str);
@@ -239,7 +212,7 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, uint16_t triggers)
 	tmp = subdirs;
 	while (tmp)
 	{
-		ret = open_dir(tmp->data, tmp_str, opts, triggers | RECURSION_FUNC);
+		ret = open_dir(tmp->data, tmp_str, opts, triggers | RECURSION_FUNC, has_file_args);
 		if (ret)
 		{
 			tmp = tmp->next;
@@ -258,7 +231,7 @@ int		open_dir(arg_t *arg, char *last_dir, uint32_t opts, uint16_t triggers)
 	return (g_err.code);
 }
 
-int		show_contents(t_list *node, uint32_t opts, int triggers)
+int		show_contents(t_list *node, uint32_t opts, int triggers, int *has_file_args)
 {
 	if (!node->next)
 	{
@@ -267,7 +240,7 @@ int		show_contents(t_list *node, uint32_t opts, int triggers)
 			triggers |= LAST_ARG_RECURSION;
 	}
 
-	return (open_dir(node->data, ((arg_t *)node->data)->path, opts, triggers));
+	return (open_dir(node->data, ((arg_t *)node->data)->path, opts, triggers, has_file_args));
 }
 
 int		initialize_cmd(cmd_t **ls)
@@ -284,30 +257,16 @@ int		initialize_cmd(cmd_t **ls)
 	(*ls)->arg_error = 0;
 	(*ls)->dir_args = NULL;
 	(*ls)->file_args = NULL;
-	// (*ls)->parent_path = NULL;
 	(*ls)->triggers = 0;
-	// (*ls)->err.code = LS_RETURN_CODE_NO_ERROR;
-	// (*ls)->err.message = NULL;
-	// (*ls)->err.type = 0;
 	ft_memset(&(*ls)->max_lengths, 0, sizeof(t_info_max_lengths));
 
 	return (LS_RETURN_CODE_NO_ERROR);
 }
 
-void print_arg_lens(t_info_max_lengths *max_lengths)
-{
-	printf ("Link cnt len: %zu\n", max_lengths->lnk_cnt_len);
-	printf ("Owner len: %zu\n", max_lengths->owner_len);
-	printf ("Group len: %zu\n", max_lengths->group_len);
-	printf ("Major len: %zu\n", max_lengths->major_len);
-	printf ("Minor len: %zu\n", max_lengths->minor_len);
-	printf ("Size len: %zu\n", max_lengths->size_len);
-	printf ("Day len: %zu\n", max_lengths->day_len);
-}
-
 int		main(int argc, char **argv)
 {
 	int					ret;
+	int					has_file_args;
 	int					error;
 	cmd_t				*ls;
 	t_list				*tmp_lst;
@@ -316,20 +275,29 @@ int		main(int argc, char **argv)
 	if (argc < 1)
 		return (1);
 	ret = error = 0;
+	has_file_args = 0;
+	ft_memset(&max_lengths, 0, sizeof(t_info_max_lengths));
 	initialize_cmd(&ls);
 	ret = arg_parse(ls, argc, argv);
 	if (ret)
 	{
 		if (ls->opt_error)
+		{
+			ft_lstclear(&ls->dir_args, &free_arg);
+			ft_lstclear(&ls->file_args, &free_arg);
+			free(ls);
 			return (LS_RETURN_CODE_FATAL);
+		}
 		error = ret;
 	}
 	if (!ls->arg_error && ls->file_args == NULL && ls->dir_args == NULL)
 		add_arg(&ls->dir_args, ".");
-	if ((ls->dir_args && ls->dir_args->next != NULL) || \
-	(ls->file_args && ls->dir_args != NULL) ||
-	ls->opts & LS_OPTION_R)
+	if ((ls->dir_args && ls->dir_args->next != NULL) || (ls->file_args && ls->dir_args != NULL) ||
+		((ls->opts & LS_OPTION_R) && ls->dir_args))
 		ls->triggers |= PRINT_DIR_NAME;
+	if (ls->file_args)
+		has_file_args = 1;
+	// 	ls->triggers |= FILE_ARGS;
 	sort_with_opts(&ls->dir_args, ls->opts);
 	sort_with_opts(&ls->file_args, ls->opts);
 	ret = count_arg_info_lengths(ls->file_args, &max_lengths, &ls->triggers);
@@ -344,7 +312,7 @@ int		main(int argc, char **argv)
 	for (tmp_lst = ls->dir_args; tmp_lst != NULL; tmp_lst = tmp_lst->next)
 	{
 		ls->parent_path = ((arg_t *)tmp_lst->data)->path;
-		ret = show_contents(tmp_lst, ls->opts, ls->triggers);
+		ret = show_contents(tmp_lst, ls->opts, ls->triggers, &has_file_args);
 		if (ret)
 		{
 			if (ret > error)

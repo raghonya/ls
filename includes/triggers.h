@@ -9,5 +9,6 @@
 # define DONT_PRINT_TOTAL	(1 << 5)
 # define RECURSION_FUNC		(1 << 6)
 # define SPACE_BEFORE_NAME	(1 << 7)
+// # define FILE_ARGS			(1 << 8)
 
 #endif

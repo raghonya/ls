@@ -119,6 +119,7 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 		print_spaces(ft_strlen(tmp[1]), max_lengths->day_len);
 		write(1, tmp[1], ft_strlen(tmp[1]));
 		write(1, " ", 1);
+		print_spaces(ft_strlen(tmp[2]), max_lengths->year_hour_len);
 		write(1, tmp[2], ft_strlen(tmp[2]));
 		write(1, " ", 1);
 		ft_free_2d_array(tmp);
@@ -135,8 +136,11 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 			write (1, " -> ", 4);
 			print_link(arg->path, arg->size);
 		}
-		if (!(triggers & DIR_LAST_ELEM) || (triggers & LAST_ARG))
+		if (!(triggers & DIR_LAST_ELEM))
+		{
+			// write (1, "a", 1);
 			write (1, "\n", 1);
+		}
 	}
 	else
 	{
@@ -145,8 +149,8 @@ int		print_name(arg_t *arg, t_info_max_lengths *max_lengths, uint32_t opts, int 
 		// printf ("%d\n",write(1, arg->name, ft_strlen(arg->name)));
 		if (!(triggers & DIR_LAST_ELEM))
 			write (1, "  ", 2);
-		else
-			write (1, "\n", 1);
+		// else
+		// 	write (1, "\n", 1);
 	}
 		// printf("smth\n");
 
@@ -224,9 +228,13 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, uint
 			ft_strcpy(g_err.name, data->path);
 			return (_err_code(*triggers));
 		}
+		// printf("%s\n", time_split[2]);
 		current_len = ft_strlen(time_split[1]);
 		if (current_len > max_lengths->day_len)
 			max_lengths->day_len = current_len;
+		current_len = ft_strlen(time_split[2]);
+		if (current_len > max_lengths->year_hour_len)
+			max_lengths->year_hour_len = current_len;
 		ft_free_2d_array(time_split);
 		order = order->next;
 	}
@@ -235,18 +243,18 @@ int		count_arg_info_lengths(t_list *order, t_info_max_lengths *max_lengths, uint
 
 void	print_ordered(t_list *order, t_info_max_lengths *max_lengths, uint32_t opts, int triggers)
 {
+	t_list	*tmp;
+
+	tmp = order;
 	if ((LS_OPTION_l & opts) && !(triggers & DONT_PRINT_TOTAL))
 		print_total_blocks(order);
-	while (order)
+	while (tmp)
 	{
-		if (order->next == NULL)
+		if (tmp->next == NULL)
 			triggers |= DIR_LAST_ELEM;
-		print_name(order->data, max_lengths, opts, triggers);
-		order = order->next;
+		print_name(tmp->data, max_lengths, opts, triggers);
+		tmp = tmp->next;
 	}
-	if ((triggers & PRINT_DIR_NAME) && !(triggers & LAST_ARG))
-	{
-		// write (1, "444hey444", 9);
+	if (order && ((triggers & PRINT_DIR_NAME) || ~(triggers & LAST_ARG)))
 		write (1, "\n", 1);
-	}
 }
